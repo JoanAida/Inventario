@@ -1,1 +1,1 @@
-# Inventario V1\nSube todos estos archivos sustituyendo los anteriores en GitHub.
+Sube todo el contenido al repositorio GitHub Inventario.
