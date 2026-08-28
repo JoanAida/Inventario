@@ -1,8 +1,0 @@
-const KEY='inv-gh';const SET='inv-set';let page='home';
-let items=JSON.parse(localStorage.getItem(KEY)||'null')||[{name:'Tienda Airseconds',price:199.99,emoji:'⛺'},{name:'Mueble cocina',price:59.99,emoji:'🗄️'}];
-let set=JSON.parse(localStorage.getItem(SET)||'{"theme":"dark"}');const app=document.getElementById('app');
-function save(){localStorage.setItem(KEY,JSON.stringify(items))}
-function home(){app.innerHTML=`<header><h1>Inventario</h1><input class=search placeholder='Buscar'></header><div class=grid id=g></div><div class=bar><button id=h>🏠</button><button id=s>⚙️</button></div><div class=modal id=m><div class=panel><button class=close id=x>✕</button><div id=hero style='font-size:72px;text-align:center'></div><h2 id=t></h2><div id=p></div></div></div>`;const g=document.getElementById('g');items.forEach((it,i)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class=thumb>${it.emoji}</div><h3>${it.name}</h3><div class=price>${it.price.toFixed(2)} €</div>`;c.onclick=()=>open(i);g.appendChild(c)});s.onclick=()=>settings();h.onclick=home}
-function settings(){app.innerHTML=`<header><h1>Ajustes</h1></header><div class=settings><div class=row><span>Tema</span><b>Oscuro</b></div><div class=row><span>Versión</span><b>3.2</b></div></div><div class=bar><button id=h>🏠</button><button>⚙️</button></div>`;h.onclick=home}
-function open(i){m.style.display='flex';hero.textContent=items[i].emoji;t.textContent=items[i].name;p.textContent=items[i].price.toFixed(2)+' €';x.onclick=()=>m.style.display='none'}
-home();
