@@ -1,1 +1,1 @@
-{"name": "Inventario", "short_name": "Inventario", "display": "standalone", "start_url": "./", "theme_color": "#2563EB", "background_color": "#F3F5F7"}
+{"name": "Inventario", "display": "standalone", "start_url": "./"}
