@@ -1,0 +1,8 @@
+{
+  "name": "Inventario",
+  "short_name": "Inventario",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#1b1b1d",
+  "theme_color": "#1b1b1d"
+}
