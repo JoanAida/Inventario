@@ -1,1 +1,1 @@
-# Inventario\nSube estos archivos a GitHub y activa GitHub Pages.
+# Inventario V1\nSube todos estos archivos sustituyendo los anteriores en GitHub.

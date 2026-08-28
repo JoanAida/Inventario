@@ -1,10 +1,12 @@
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Inventario</title>
-<link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css"></head>
-<body><header><h1>Inventario</h1><input id="q" placeholder="Buscar..."></header>
-<div id="grid"></div><button id="add">+</button>
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inventario</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css">
+</head><body>
+<header><h1>Inventario</h1><input id="search" placeholder="Buscar producto..."></header>
+<div id="cats"></div><main id="grid"></main>
+<button id="fab">+</button>
+<div id="overlay" class="hide"><section id="sheet"><button id="x">✕</button><div id="hero"></div><h2 id="t"></h2><div id="meta"></div><p id="d"></p><div id="specs"></div></section></div>
 <dialog id="dlg"><form method="dialog"><h3>Nuevo producto</h3>
-<input id="n" placeholder="Nombre"><input id="p" type="number" step="0.01" placeholder="Precio">
-<select id="c"><option>Camping</option><option>Pesca</option><option>Tecnología</option><option>Herramientas</option></select>
-<button id="save">Guardar</button></form></dialog><script src="app.js"></script></body></html>
+<input id="name" placeholder="Nombre" required><select id="cat"><option>Camping</option><option>Pesca</option><option>Tecnología</option><option>Herramientas</option><option>Coche</option><option>Domótica</option></select>
+<input id="price" type="number" step="0.01" placeholder="Precio €"><textarea id="desc" placeholder="Descripción"></textarea><input id="imgs" type="file" accept="image/*" multiple><button id="save">Guardar</button></form></dialog>
+<script src="app.js"></script></body></html>
