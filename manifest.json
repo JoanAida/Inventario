@@ -1,0 +1,15 @@
+{
+  "name": "Inventario",
+  "short_name": "Inventario",
+  "display": "standalone",
+  "start_url": "./index.html",
+  "background_color": "#eef4f1",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

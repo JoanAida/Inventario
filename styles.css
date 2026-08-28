@@ -1,0 +1,4 @@
+body{margin:0;font-family:-apple-system;background:#eef4f1}header{padding:18px}h1{margin:0}
+#q{width:100%;padding:12px;margin-top:10px;border-radius:12px;border:1px solid #ccc}
+#grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:18px 18px 90px}.card{background:#fff;border-radius:16px;padding:12px}.e{font-size:42px}
+#add{position:fixed;right:18px;bottom:18px;width:58px;height:58px;border:none;border-radius:50%;background:#0f766e;color:#fff;font-size:32px}dialog{border:none;border-radius:18px;padding:18px}dialog input,dialog select{width:100%;padding:10px;margin:6px 0}

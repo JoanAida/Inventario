@@ -1,0 +1,1 @@
+# Inventario\nSube estos archivos a GitHub y activa GitHub Pages.
