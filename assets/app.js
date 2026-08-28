@@ -1,32 +1,8 @@
-
-const DB='inv31';const SET='inv31set';
-let settings=JSON.parse(localStorage.getItem(SET)||'{"theme":"dark"}');
-let items=JSON.parse(localStorage.getItem(DB)||'null')||[
- {name:"Tienda Airseconds",cat:"Camping",price:199.99,emoji:"⛺",desc:"",imgs:[]},
- {name:"Mueble cocina",cat:"Camping",price:59.99,emoji:"🗄️",desc:"",imgs:[]},
- {name:"Mesa + 4",cat:"Camping",price:39.99,emoji:"🪑",desc:"",imgs:[]}
-];
-let view='home',filter='Todos',current=-1;
-const cats=['Todos','Camping','Pesca','Tecnología'];
-const app=document.getElementById('app');
-function save(){localStorage.setItem(DB,JSON.stringify(items))}
-function render(){
- if(view==='settings'){
- app.innerHTML=`<header><h1>⚙️ Ajustes</h1></header><div class=row><div><b>Tema</b><div>${settings.theme}</div></div><button id=th>🌙</button></div><div class=row><div><b>Versión</b><div>3.1</div></div></div>`;
- document.getElementById('th').onclick=()=>alert('El tema oscuro ya está activo');
- } else {
- app.innerHTML=`<header><h1>📦 Inventario</h1><input id=q class=search placeholder='Buscar...'></header><div id=cats class=cats></div><div id=grid class=grid></div><button id=add class=fab>+</button><input id=file type=file accept='image/*' hidden><div id=sheet class=sheet><div class=panel><button id=close>✕</button><div id=hero class=hero></div><h2 id=title></h2><div id=price></div><textarea id=desc style="width:100%;background:#323640;color:white;border:none;border-radius:10px;padding:10px"></textarea><div id=gal class=gallery></div><button id=addp>Añadir foto</button><button id=savep>Guardar</button><input id=pick type=file accept='image/*' multiple hidden></div></div>`;
- const ce=document.getElementById('cats');cats.forEach(c=>{const d=document.createElement('div');d.className='chip'+(c===filter?' on':'');d.textContent=c;d.onclick=()=>{filter=c;render()};ce.appendChild(d)});
- const grid=document.getElementById('grid');
- const draw=()=>{const q=document.getElementById('q').value.toLowerCase();grid.innerHTML='';items.filter(i=>(filter==='Todos'||i.cat===filter)&&i.name.toLowerCase().includes(q)).forEach((it,idx)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class=thumb>${it.imgs[0]?`<img src="${it.imgs[0]}">`:it.emoji}</div><div class=info><b>${it.name}</b><div>${it.cat}</div><div class=price>${it.price.toFixed(2)} €</div></div>`;c.onclick=()=>open(items.indexOf(it));grid.appendChild(c)})};
- document.getElementById('q').oninput=draw;draw();
- document.getElementById('add').onclick=()=>document.getElementById('file').click();
- document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=x=>{items.unshift({name:f.name.replace(/\.[^.]+$/,''),cat:'Camping',price:0,emoji:'📦',desc:'',imgs:[x.target.result]});save();render()};r.readAsDataURL(f)};
- }
- app.insertAdjacentHTML('beforeend',`<div class=bar><button id=home>🏠</button><button id=settings>⚙️</button></div>`);
- document.getElementById('home').onclick=()=>{view='home';render()};
- document.getElementById('settings').onclick=()=>{view='settings';render()};
-}
-function open(i){current=i;const p=items[i];sheet.style.display='flex';hero.innerHTML=p.imgs[0]?`<img src="${p.imgs[0]}" style="width:100%;height:100%;object-fit:cover;border-radius:18px">`:p.emoji;title.textContent=p.name;price.textContent=p.price.toFixed(2)+' €';desc.value=p.desc;drawGal();close.onclick=()=>sheet.style.display='none';addp.onclick=()=>pick.click();pick.onchange=e=>{[...e.target.files].forEach(f=>{const r=new FileReader();r.onload=x=>{p.imgs.push(x.target.result);save();drawGal();render()};r.readAsDataURL(f)})};savep.onclick=()=>{p.desc=desc.value;save();sheet.style.display='none';render()}}
-function drawGal(){gal.innerHTML='';items[current].imgs.forEach((s,idx)=>{const w=document.createElement('div');w.innerHTML=`<img src="${s}"><button>🗑️</button>`;w.querySelector('button').onclick=()=>{items[current].imgs.splice(idx,1);save();drawGal();render()};gal.appendChild(w)})}
-render();
+const KEY='inv-gh';const SET='inv-set';let page='home';
+let items=JSON.parse(localStorage.getItem(KEY)||'null')||[{name:'Tienda Airseconds',price:199.99,emoji:'⛺'},{name:'Mueble cocina',price:59.99,emoji:'🗄️'}];
+let set=JSON.parse(localStorage.getItem(SET)||'{"theme":"dark"}');const app=document.getElementById('app');
+function save(){localStorage.setItem(KEY,JSON.stringify(items))}
+function home(){app.innerHTML=`<header><h1>Inventario</h1><input class=search placeholder='Buscar'></header><div class=grid id=g></div><div class=bar><button id=h>🏠</button><button id=s>⚙️</button></div><div class=modal id=m><div class=panel><button class=close id=x>✕</button><div id=hero style='font-size:72px;text-align:center'></div><h2 id=t></h2><div id=p></div></div></div>`;const g=document.getElementById('g');items.forEach((it,i)=>{const c=document.createElement('div');c.className='card';c.innerHTML=`<div class=thumb>${it.emoji}</div><h3>${it.name}</h3><div class=price>${it.price.toFixed(2)} €</div>`;c.onclick=()=>open(i);g.appendChild(c)});s.onclick=()=>settings();h.onclick=home}
+function settings(){app.innerHTML=`<header><h1>Ajustes</h1></header><div class=settings><div class=row><span>Tema</span><b>Oscuro</b></div><div class=row><span>Versión</span><b>3.2</b></div></div><div class=bar><button id=h>🏠</button><button>⚙️</button></div>`;h.onclick=home}
+function open(i){m.style.display='flex';hero.textContent=items[i].emoji;t.textContent=items[i].name;p.textContent=items[i].price.toFixed(2)+' €';x.onclick=()=>m.style.display='none'}
+home();
