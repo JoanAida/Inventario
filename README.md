@@ -1,1 +1,0 @@
-# Inventario V4\nSube todo el contenido al repositorio.
