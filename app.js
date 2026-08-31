@@ -1,27 +1,144 @@
+const GITHUB = {
+  owner: "JoanAida",
+  repo: "Inventario",
+  branch: "main",
+  token: "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"
+};
+
 const CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
 let filter = "Todos";
 let editIndex = -1;
 
-let products = JSON.parse(localStorage.getItem("inventario")) || [
-  {
-    name: "Airseconds 4.1",
-    cat: "Camping",
-    price: 199.99,
-    desc: "Tienda para 4 personas",
-    emoji: "⛺"
-  }
-];
+let products = [];
 
 const app = document.getElementById("app");
 
-function saveDB() {
-  const copia = products.map(p => ({
-    ...p,
-    gallery: [],
-    photo: ""
-  }));
+async function saveDB() {
+  let sha;
 
-  localStorage.setItem("inventario", JSON.stringify(copia));
+  const url = `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/inventario.json`;
+
+  const info = await fetch(`${url}?ref=${GITHUB.branch}`, {
+    headers: {
+      Authorization: `Bearer ${GITHUB.token}`,
+      Accept: "application/vnd.github+json"
+    }
+  });
+
+  if (info.status === 200) {
+    sha = (await info.json()).sha;
+  }
+
+  const content = btoa(
+    unescape(encodeURIComponent(JSON.stringify(products, null, 2)))
+  );
+
+  const body = {
+    message: "Actualizar inventario",
+    content,
+    branch: GITHUB.branch
+  };
+
+  if (sha) body.sha = sha;
+
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${GITHUB.token}`,
+      Accept: "application/vnd.github+json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message);
+  }
+}
+
+async function loadDB() {
+  try {
+    const res = await fetch(
+  `https://raw.githubusercontent.com/${GITHUB.owner}/${GITHUB.repo}/${GITHUB.branch}/inventario.json?v=${Date.now()}`
+);
+
+    if (res.ok) {
+      products = await res.json();
+    } else {
+      products = [];
+    }
+
+  } catch (err) {
+    console.error("Error cargando inventario:", err);
+    products = [];
+  }
+}
+
+async function uploadImage(file) {
+  const fileName = file.name;
+
+  const base64 = await new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.readAsDataURL(file);
+  });
+
+  const res = await fetch(
+    `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/images/${encodeURIComponent(fileName)}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${GITHUB.token}`,
+        Accept: "application/vnd.github+json"
+      },
+      body: JSON.stringify({
+        message: `Subir ${fileName}`,
+        content: base64,
+        branch: GITHUB.branch
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error(data);
+    throw new Error(data.message);
+  }
+
+  return `https://cdn.jsdelivr.net/gh/${GITHUB.owner}/${GITHUB.repo}@${GITHUB.branch}/images/${encodeURIComponent(fileName)}`;
+}
+
+async function deleteImage(url) {
+  const path = url.split("/images/")[1];
+
+  // Obtener el SHA del archivo
+  const info = await fetch(
+    `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/images/${path}?ref=${GITHUB.branch}`,
+    {
+      headers: {
+        Authorization: `Bearer ${GITHUB.token}`,
+        Accept: "application/vnd.github+json"
+      }
+    }
+  ).then(r => r.json());
+
+  // Eliminar el archivo
+  await fetch(
+    `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/images/${path}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${GITHUB.token}`,
+        Accept: "application/vnd.github+json"
+      },
+      body: JSON.stringify({
+        message: `Eliminar ${path}`,
+        sha: info.sha,
+        branch: GITHUB.branch
+      })
+    }
+  );
 }
 
 function render() {
@@ -47,13 +164,13 @@ function render() {
     <label>Apariencia</label>
 
     <div class="row">
-      <button class="btn sec" id="dark">🌙 Oscuro</button>
-      <button class="btn pri" id="light">☀️ Claro</button>
-    </div>
+  <button class="btn sec" id="dark">🌙 Oscuro</button>
+  <button class="btn pri" id="light">☀️ Claro</button>
+</div>
 
-    <button class="btn sec" id="closeSettings" style="margin-top:12px">
-      Cerrar
-    </button>
+<button class="btn sec" id="closeSettings" style="margin-top:12px">
+  Cerrar
+</button>
   </div>
 </div>
 `;
@@ -74,6 +191,7 @@ dark.onclick = () => {
 light.onclick = () => {
   document.body.classList.add("light");
 };
+
 }
 
 function drawCategories() {
@@ -170,9 +288,7 @@ function openViewer(index) {
   `;
 
   document.body.appendChild(bg);
-   
   
-
   let current = 0;
 const total = [p.photo, ...(p.gallery || [])].filter(Boolean).length;
 
@@ -199,14 +315,26 @@ if (total > 1) {
     openEditor(index);
   };
 
-  del.onclick = () => {
-    if (!confirm("¿Borrar este producto?")) return;
+ del.onclick = async () => {
+  if (!confirm("¿Borrar este producto?")) return;
+
+  const fotos = [p.photo, ...(p.gallery || [])].filter(Boolean);
+
+  try {
+    for (const url of fotos) {
+      await deleteImage(url);
+    }
 
     products.splice(index, 1);
-    saveDB();
-    bg.remove();
-    drawProducts();
-  };
+await saveDB();
+bg.remove();
+drawProducts();
+
+  } catch (err) {
+    console.error(err);
+    alert("Error al borrar las fotos de GitHub");
+  }
+};
 
   bg.onclick = e => {
     if (e.target === bg) bg.remove();
@@ -216,13 +344,14 @@ if (total > 1) {
 function openEditor(index = -1) {
   editIndex = index;
 
-  const p = index >= 0 ? products[index] : {
-    name: "",
-    cat: "Camping",
-    price: "",
-    desc: "",
-    gallery: []
-  };
+const p = index >= 0 ? products[index] : {
+  name: "",
+  cat: "Camping",
+  price: "",
+  desc: "",
+  photo: "",
+  gallery: []
+};
 
   const bg = document.createElement("div");
   bg.className = "overlay show";
@@ -275,56 +404,72 @@ function openEditor(index = -1) {
   const btnCancel = bg.querySelector("#cancel");
 
   let gallery = [...(p.gallery || [])];
+let newFiles = [];
 
-  const drawPreview = () => {
-    preview.innerHTML = gallery.map(img=>`<img src="${img}">`).join("");
-  };
+const drawPreview = () => {
+  preview.innerHTML = "";
 
+  gallery.forEach(url => {
+    preview.innerHTML += `<img src="${url}">`;
+  });
+
+  newFiles.forEach(file => {
+    preview.innerHTML += `<img src="${URL.createObjectURL(file)}">`;
+  });
+};
+
+drawPreview();
+
+ePhotos.onchange = () => {
+  newFiles = [...ePhotos.files];
   drawPreview();
-
-  ePhotos.onchange = async () => {
-    gallery = [];
-
-    for (const file of ePhotos.files) {
-      const img = await new Promise(res=>{
-        const r = new FileReader();
-        r.onload = ()=>res(r.result);
-        r.readAsDataURL(file);
-      });
-      gallery.push(img);
-    }
-
-    drawPreview();
-  };
+};
 
   btnCancel.onclick = ()=>bg.remove();
 
-  btnSave.onclick = () => {
-  const obj = {
-      name:eName.value,
-      cat:eCat.value,
-      price:Number(ePrice.value||0),
-      desc:eDesc.value,
-      photo:gallery[0]||"",
-      gallery: gallery.slice(1)
+btnSave.onclick = async () => {
+  try {
+    btnSave.disabled = true;
+    btnSave.textContent = "Subiendo...";
+
+    const uploaded = [];
+
+    for (const file of newFiles) {
+      uploaded.push(await uploadImage(file));
+    }
+
+    const allPhotos = [...gallery, ...uploaded];
+
+    const obj = {
+      name: eName.value,
+      cat: eCat.value,
+      price: Number(ePrice.value || 0),
+      desc: eDesc.value,
+      photo: allPhotos[0] || "",
+      gallery: allPhotos.slice(1)
     };
 
-    if(editIndex>=0) products[editIndex]=obj;
-    else products.unshift(obj);
+    if (editIndex >= 0) products[editIndex] = obj;
+else products.unshift(obj);
 
-    try {
-  saveDB();
-  bg.remove();
-  drawProducts();
-} catch (e) {
-  alert(e.message);
-  console.error(e);
-}
-  };
+await saveDB();
+bg.remove();
+drawProducts();
+alert("Guardado");
+
+  } 
+  catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
 
   bg.onclick=e=>{
     if(e.target===bg) bg.remove();
   };
 }
 
-render();
+(async () => {
+  await loadDB();
+  render();
+})();
