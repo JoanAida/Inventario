@@ -1,0 +1,33 @@
+name: Inventario API
+
+on:
+  repository_dispatch:
+    types: [save_inventory]
+
+permissions:
+  contents: write
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guardar inventario
+        run: |
+          echo '${{ github.event.client_payload.json }}' > inventario.json
+
+      - name: Commit
+        run: |
+          git config user.name "Inventario Bot"
+          git config user.email "bot@github.com"
+
+          git add inventario.json
+
+          if git diff --cached --quiet; then
+            echo "Sin cambios"
+          else
+            git commit -m "Actualizar inventario"
+            git push
+          fi
