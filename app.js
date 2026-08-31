@@ -1,9 +1,10 @@
 const GITHUB = {
-  const API = "https://inventario-api.joanvalenzuelabusquets.workers.dev";
   owner: "JoanAida",
   repo: "Inventario",
-  branch: "main",
+  branch: "main"
 };
+
+const API = "https://inventario-api.joanvalenzuelabusquets.workers.dev";
 
 const CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
 let filter = "Todos";
