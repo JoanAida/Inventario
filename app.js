@@ -2,7 +2,6 @@ const GITHUB = {
   owner: "JoanAida",
   repo: "Inventario",
   branch: "main",
-  token: "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"
 };
 
 const CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
