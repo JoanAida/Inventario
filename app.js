@@ -1,4 +1,5 @@
 const GITHUB = {
+  const API = "https://inventario-api.joanvalenzuelabusquets.workers.dev";
   owner: "JoanAida",
   repo: "Inventario",
   branch: "main",
@@ -13,62 +14,28 @@ let products = [];
 const app = document.getElementById("app");
 
 async function saveDB() {
-  let sha;
-
-  const url = `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/inventario.json`;
-
-  const info = await fetch(`${url}?ref=${GITHUB.branch}`, {
+  const res = await fetch(API, {
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${GITHUB.token}`,
-      Accept: "application/vnd.github+json"
-    }
-  });
-
-  if (info.status === 200) {
-    sha = (await info.json()).sha;
-  }
-
-  const content = btoa(
-    unescape(encodeURIComponent(JSON.stringify(products, null, 2)))
-  );
-
-  const body = {
-    message: "Actualizar inventario",
-    content,
-    branch: GITHUB.branch
-  };
-
-  if (sha) body.sha = sha;
-
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${GITHUB.token}`,
-      Accept: "application/vnd.github+json"
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify({ products })
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.message);
+    throw new Error(await res.text());
   }
 }
 
 async function loadDB() {
   try {
     const res = await fetch(
-  `https://raw.githubusercontent.com/${GITHUB.owner}/${GITHUB.repo}/${GITHUB.branch}/inventario.json?v=${Date.now()}`
-);
+      `https://raw.githubusercontent.com/${GITHUB.owner}/${GITHUB.repo}/${GITHUB.branch}/inventario.json?v=${Date.now()}`
+    );
 
-    if (res.ok) {
-      products = await res.json();
-    } else {
-      products = [];
-    }
+    products = res.ok ? await res.json() : [];
 
-  } catch (err) {
-    console.error("Error cargando inventario:", err);
+  } catch {
     products = [];
   }
 }
