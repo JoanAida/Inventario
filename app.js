@@ -503,20 +503,20 @@ function openCropper(index, foto){
 
   img.onload = () => {
 
-    // ABRIR
-    cropBox.style.display = "block";
-    cropBox.classList.add("show");
+  // ABRIR
+  cropBox.style.display = "flex";
+  cropBox.classList.add("show");
 
-    scale = Math.min(
-      crop.w / img.width,
-      crop.h / img.height
-    );
+  scale = Math.min(
+    crop.w / img.width,
+    crop.h / img.height
+  );
 
-    imgX = canvas.width / 2;
-    imgY = canvas.height / 2;
+  imgX = canvas.width / 2;
+  imgY = canvas.height / 2;
 
-    draw();
-  };
+  draw();
+};
 
   img.src = foto.url;
 
@@ -732,9 +732,9 @@ canvas.ontouchcancel = () => pinchStart = null;
   };
 
   cancelCrop.onclick = () => {
-    cropBox.classList.remove("show");
-    cropBox.style.display="none";
-  };
+  cropBox.classList.remove("show");
+  cropBox.style.display = "none";
+};
 
   const applyCrop = () => {
 
