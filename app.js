@@ -1,9 +1,3 @@
-const GITHUB = {
-  owner: "JoanAida",
-  repo: "Inventario",
-  branch: "main"
-};
-
 const API = "https://inventario-api.joanvalenzuelabusquets.workers.dev";
 
 const CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
@@ -290,7 +284,6 @@ if (total > 1) {
 await saveDB();
 bg.remove();
 drawProducts();
-alert("Guardado");
 
   } catch (err) {
     console.error(err);
@@ -695,12 +688,13 @@ for (let i = 0; i < gallery.length; i++) {
     await saveDB();
     bg.remove();
     drawProducts();
-    alert("Guardado");
 
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
+ } catch (err) {
+  console.error(err);
+  btnSave.disabled = false;
+  btnSave.textContent = "Guardar";
+  alert(err.message);
+ }
 };
 
 bg.onclick = e => {
