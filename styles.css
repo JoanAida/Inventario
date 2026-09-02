@@ -283,34 +283,21 @@ textarea{
 }
 
 .carousel{
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  border-radius:16px;
-  margin-bottom:16px;
-  -webkit-overflow-scrolling:touch;
-}
-
-.carousel{
+  position:relative;
   width:100%;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch;
+  overflow:hidden;
   border-radius:16px;
   margin-bottom:16px;
-}
-
-.carousel::-webkit-scrollbar{
-  display:none;
 }
 
 .track{
   display:flex;
+  transition:transform .25s ease;
 }
 
 .slide{
-  flex:0 0 100%;
+  min-width:100%;
   aspect-ratio:1;
-  scroll-snap-align:start;
   background:var(--photo-bg);
   display:flex;
   align-items:center;
@@ -323,11 +310,6 @@ textarea{
   object-fit:contain;
   padding:12px;
 }
-
-.carousel{position:relative;overflow:hidden;border-radius:16px}
-.track{display:flex;transition:transform .25s ease}
-.slide{min-width:100%;aspect-ratio:1;background:var(--photo-bg)}
-.slide img{width:100%;height:100%;object-fit:contain;padding:12px}
 
 .nav{
   position:absolute;
@@ -342,8 +324,9 @@ textarea{
   font-size:24px;
   cursor:pointer;
 }
-.prev{left:10px}
-.next{right:10px}
+
+.prev{ left:10px; }
+.next{ right:10px; }
 
 .customFields{
   margin-top:16px;
@@ -371,24 +354,9 @@ textarea{
 }
 
 .cropper{
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.75);
-  display: none;
-  z-index: 9999;
-
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 20px;
+  display:none;
 }
 
 .cropper.show{
-  display: flex;
-}
-
-#cropCanvas{
-  max-width: 100%;
-  height: auto;
-  touch-action: none;
+  display:flex; /* o block, según tu diseño */
 }
