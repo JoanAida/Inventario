@@ -296,7 +296,8 @@ const p = index >= 0 ? products[index] : {
   price: "",
   desc: "",
   photo: "",
-  gallery: []
+  gallery: [],
+  fields: []
 };
 
   const bg = document.createElement("div");
@@ -350,8 +351,8 @@ const p = index >= 0 ? products[index] : {
   const btnCancel = bg.querySelector("#cancel");
 
   let gallery = [...(p.gallery || [])];
-let newFiles = [];
-
+  let newFiles = [];
+  let fields = [...(p.fields || [])];
 const drawPreview = () => {
   preview.innerHTML = "";
 
@@ -386,14 +387,15 @@ btnSave.onclick = async () => {
 
     const allPhotos = [...gallery, ...uploaded];
 
-    const obj = {
-      name: eName.value,
-      cat: eCat.value,
-      price: Number(ePrice.value || 0),
-      desc: eDesc.value,
-      photo: allPhotos[0] || "",
-      gallery: allPhotos.slice(1)
-    };
+  const obj = {
+  name: eName.value,
+  cat: eCat.value,
+  price: Number(ePrice.value || 0),
+  desc: eDesc.value,
+  photo: allPhotos[0] || "",
+  gallery: allPhotos.slice(1),
+  fields
+};
 
     if (editIndex >= 0) products[editIndex] = obj;
 else products.unshift(obj);
