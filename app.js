@@ -375,7 +375,7 @@ const p = index >= 0 ? products[index] : {
   const btnSave = bg.querySelector("#save");
   const btnCancel = bg.querySelector("#cancel");
 
-  let gallery = [...(p.gallery || [])];
+ let gallery = [p.photo, ...(p.gallery || [])].filter(Boolean);
   let newFiles = [];
   let fields = [...(p.fields || [])];
 
