@@ -605,24 +605,31 @@ function openCropper(index, foto){
       -(offsetY-20-FRAME/2)/scale - img.height/2
     );
 
-    out.toBlob(blob=>{
+  const esPNG =
+  foto.file?.type === "image/png" ||
+  foto.url.toLowerCase().endsWith(".png");
 
-      const file = new File(
-        [blob],
-        `foto_${Date.now()}.jpg`,
-        {type:"image/jpeg"}
-      );
+const mime = esPNG ? "image/png" : "image/jpeg";
+const ext  = esPNG ? "png" : "jpg";
 
-      if(foto.existing){
-        gallery[index] = file;
-      }else{
-        newFiles[index-gallery.length] = file;
-      }
+out.toBlob(blob => {
 
-      cropBox.style.display = "none";
-      drawPreview();
+  const file = new File(
+    [blob],
+    `foto_${Date.now()}.${ext}`,
+    { type: mime }
+  );
 
-    },"image/jpeg",0.92);
+  if (foto.existing) {
+    gallery[index] = file;
+  } else {
+    newFiles[index - gallery.length] = file;
+  }
+
+  cropBox.style.display = "none";
+  drawPreview();
+
+}, mime, esPNG ? undefined : 0.92);
 
   };
 
