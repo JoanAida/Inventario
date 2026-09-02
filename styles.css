@@ -371,31 +371,24 @@ textarea{
 }
 
 .cropper{
-  position:fixed;
-  inset:0;
-  background:#111;
-  z-index:9999;
-  display:none;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  padding:16px;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.75);
+  display: none;
+  z-index: 9999;
+
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 20px;
 }
 
-.cropper canvas{
-  width:min(92vw,420px);
-  height:auto;
-  border-radius:18px;
-  touch-action:none;
-  user-select:none;
-  cursor:grab;
+.cropper.show{
+  display: flex;
 }
 
-.cropper canvas:active{
-  cursor:grabbing;
-}
-
-.cropper .row{
-  width:min(92vw,420px);
-  margin-top:16px;
+#cropCanvas{
+  max-width: 100%;
+  height: auto;
+  touch-action: none;
 }
