@@ -801,16 +801,14 @@ out.height = Math.round(crop.h * ratio);
 
   const o = out.getContext("2d");
 
-  const isPNG =
-    foto.file?.type === "image/png" ||
-    foto.url.toLowerCase().endsWith(".png");
+  const transparent = !backgroundColor;
 
-  if (backgroundColor) {
+if (!transparent) {
   o.fillStyle = backgroundColor;
   o.fillRect(0, 0, out.width, out.height);
 }
 
-// 👇 AÑADE ESTA LÍNEA JUSTO AQUÍ
+o.save();
 o.scale(ratio, ratio);
 
 o.translate(-crop.x, -crop.y);
@@ -819,14 +817,13 @@ o.rotate(rotation * Math.PI / 180);
 o.scale(scale, scale);
 
 o.drawImage(img, -img.width / 2, -img.height / 2);
+o.restore();
 
-  out.toBlob((blob) => {
+out.toBlob((blob) => {
     if (!blob) {
       alert("Error al recortar");
       return;
     }
-
-  const transparent = !backgroundColor;
 
 const type = transparent ? "image/png" : "image/jpeg";
 const ext = transparent ? "png" : "jpg";
