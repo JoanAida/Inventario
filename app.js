@@ -677,29 +677,38 @@ function openCropper(index, foto){
 
   let pinchStart = null;
 
-  canvas.addEventListener("touchstart", e => {
-    if(e.touches.length===2){
-      const a=e.touches[0], b=e.touches[1];
-      pinchStart=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
-    }
-  }, {passive:false});
+canvas.ontouchstart = e => {
+  if (e.touches.length === 2) {
+    const a = e.touches[0];
+    const b = e.touches[1];
+    pinchStart = Math.hypot(
+      a.clientX - b.clientX,
+      a.clientY - b.clientY
+    );
+  }
+};
 
-  canvas.addEventListener("touchmove", e => {
-    if(e.touches.length!==2 || !pinchStart) return;
+canvas.ontouchmove = e => {
+  if (e.touches.length !== 2 || !pinchStart) return;
 
-    e.preventDefault();
+  e.preventDefault();
 
-    const a=e.touches[0], b=e.touches[1];
-    const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+  const a = e.touches[0];
+  const b = e.touches[1];
 
-    scale*=d/pinchStart;
-    pinchStart=d;
+  const d = Math.hypot(
+    a.clientX - b.clientX,
+    a.clientY - b.clientY
+  );
 
-    draw();
-  }, {passive:false});
+  scale *= d / pinchStart;
+  pinchStart = d;
 
-  canvas.addEventListener("touchend", ()=>pinchStart=null);
-  canvas.addEventListener("touchcancel", ()=>pinchStart=null);
+  draw();
+};
+
+canvas.ontouchend = () => pinchStart = null;
+canvas.ontouchcancel = () => pinchStart = null;
 
   rotateBtn.onclick = () => {
     rotation=(rotation+90)%360;
