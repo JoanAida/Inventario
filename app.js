@@ -755,8 +755,6 @@ function openCropper(index, foto){
   };
 
 }
-
-}
   
 drawFields();
 drawPreview();
