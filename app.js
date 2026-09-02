@@ -500,20 +500,21 @@ function openCropper(index, foto){
 
   const HANDLE = 18;
 
-  img.onload = ()=>{
+  img.onload = () => {
 
-    cropBox.style.display="block";
+    // ABRIR
+    cropBox.style.display = "block";
+    cropBox.classList.add("show");
 
     scale = Math.min(
-      crop.w/img.width,
-      crop.h/img.height
+      crop.w / img.width,
+      crop.h / img.height
     );
 
-    imgX = canvas.width/2;
-    imgY = canvas.height/2;
+    imgX = canvas.width / 2;
+    imgY = canvas.height / 2;
 
     draw();
-
   };
 
   img.src = foto.url;
@@ -536,7 +537,6 @@ function openCropper(index, foto){
     ctx.restore();
 
     ctx.fillStyle="rgba(0,0,0,.55)";
-
     ctx.fillRect(0,0,340,crop.y);
     ctx.fillRect(0,crop.y,crop.x,crop.h);
     ctx.fillRect(crop.x+crop.w,crop.y,340,crop.h);
@@ -546,18 +546,17 @@ function openCropper(index, foto){
     ctx.lineWidth=2;
     ctx.strokeRect(crop.x,crop.y,crop.w,crop.h);
 
-  // Esquinas
-drawHandle(crop.x, crop.y);
-drawHandle(crop.x + crop.w, crop.y);
-drawHandle(crop.x, crop.y + crop.h);
-drawHandle(crop.x + crop.w, crop.y + crop.h);
+    // Esquinas
+    drawHandle(crop.x, crop.y);
+    drawHandle(crop.x + crop.w, crop.y);
+    drawHandle(crop.x, crop.y + crop.h);
+    drawHandle(crop.x + crop.w, crop.y + crop.h);
 
-// Laterales (estilo iPhone)
-drawHandle(crop.x + crop.w/2, crop.y);
-drawHandle(crop.x + crop.w/2, crop.y + crop.h);
-drawHandle(crop.x, crop.y + crop.h/2);
-drawHandle(crop.x + crop.w, crop.y + crop.h/2);
-
+    // Laterales
+    drawHandle(crop.x + crop.w/2, crop.y);
+    drawHandle(crop.x + crop.w/2, crop.y + crop.h);
+    drawHandle(crop.x, crop.y + crop.h/2);
+    drawHandle(crop.x + crop.w, crop.y + crop.h/2);
   }
 
   function drawHandle(x,y){
@@ -567,55 +566,53 @@ drawHandle(crop.x + crop.w, crop.y + crop.h/2);
     ctx.fill();
   }
 
-  let mode=null;
-  let start={};
+  function dist(ax,ay,bx,by){
+    return Math.hypot(ax-bx, ay-by);
+  }
 
-  canvas.onpointerdown=e=>{
+  let mode = null;
+  let start = {};
 
-    const r=canvas.getBoundingClientRect();
-    const x=(e.clientX-r.left)*(340/r.width);
-    const y=(e.clientY-r.top)*(420/r.height);
+  canvas.onpointerdown = e => {
 
-    start={x,y,crop:{...crop}};
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX-r.left)*(340/r.width);
+    const y = (e.clientY-r.top)*(420/r.height);
 
-const mx = crop.x + crop.w/2;
-const my = crop.y + crop.h/2;
+    start = {x,y,crop:{...crop}};
 
-if (dist(x,y,crop.x,crop.y) < HANDLE) mode="tl";
-else if (dist(x,y,crop.x+crop.w,crop.y) < HANDLE) mode="tr";
-else if (dist(x,y,crop.x,crop.y+crop.h) < HANDLE) mode="bl";
-else if (dist(x,y,crop.x+crop.w,crop.y+crop.h) < HANDLE) mode="br";
+    const mx = crop.x + crop.w/2;
+    const my = crop.y + crop.h/2;
 
-else if (dist(x,y,mx,crop.y) < HANDLE) mode="top";
-else if (dist(x,y,mx,crop.y+crop.h) < HANDLE) mode="bottom";
-else if (dist(x,y,crop.x,my) < HANDLE) mode="left";
-else if (dist(x,y,crop.x+crop.w,my) < HANDLE) mode="right";
+    if (dist(x,y,crop.x,crop.y)<HANDLE) mode="tl";
+    else if (dist(x,y,crop.x+crop.w,crop.y)<HANDLE) mode="tr";
+    else if (dist(x,y,crop.x,crop.y+crop.h)<HANDLE) mode="bl";
+    else if (dist(x,y,crop.x+crop.w,crop.y+crop.h)<HANDLE) mode="br";
+    else if (dist(x,y,mx,crop.y)<HANDLE) mode="top";
+    else if (dist(x,y,mx,crop.y+crop.h)<HANDLE) mode="bottom";
+    else if (dist(x,y,crop.x,my)<HANDLE) mode="left";
+    else if (dist(x,y,crop.x+crop.w,my)<HANDLE) mode="right";
+    else if (x>crop.x && x<crop.x+crop.w && y>crop.y && y<crop.y+crop.h) mode="move";
 
-else if (x>crop.x && x<crop.x+crop.w && y>crop.y && y<crop.y+crop.h)
-  mode="move";
-  
-    else mode=null;
-
-    canvas.setPointerCapture(e.pointerId);
-
+    if(mode) canvas.setPointerCapture(e.pointerId);
   };
 
-  canvas.onpointermove=e=>{
+  canvas.onpointermove = e => {
 
     if(!mode) return;
 
-    const r=canvas.getBoundingClientRect();
-    const x=(e.clientX-r.left)*(340/r.width);
-    const y=(e.clientY-r.top)*(420/r.height);
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX-r.left)*(340/r.width);
+    const y = (e.clientY-r.top)*(420/r.height);
 
-    const dx=x-start.x;
-    const dy=y-start.y;
+    const dx = x-start.x;
+    const dy = y-start.y;
 
     if(mode==="move"){
-      imgX+=dx;
-      imgY+=dy;
-      start.x=x;
-      start.y=y;
+      imgX += dx;
+      imgY += dy;
+      start.x = x;
+      start.y = y;
     }
 
     if(mode==="tl"){
@@ -642,128 +639,122 @@ else if (x>crop.x && x<crop.x+crop.w && y>crop.y && y<crop.y+crop.h)
       crop.h=Math.max(60,start.crop.h+dy);
     }
 
-if(mode==="top"){
-  crop.y = Math.min(start.crop.y+dy, start.crop.y+start.crop.h-60);
-  crop.h = start.crop.h-(crop.y-start.crop.y);
-}
+    if(mode==="top"){
+      crop.y=Math.min(start.crop.y+dy,start.crop.y+start.crop.h-60);
+      crop.h=start.crop.h-(crop.y-start.crop.y);
+    }
 
-if(mode==="bottom"){
-  crop.h = Math.max(60, start.crop.h+dy);
-}
+    if(mode==="bottom"){
+      crop.h=Math.max(60,start.crop.h+dy);
+    }
 
-if(mode==="left"){
-  crop.x = Math.min(start.crop.x+dx, start.crop.x+start.crop.w-60);
-  crop.w = start.crop.w-(crop.x-start.crop.x);
-}
+    if(mode==="left"){
+      crop.x=Math.min(start.crop.x+dx,start.crop.x+start.crop.w-60);
+      crop.w=start.crop.w-(crop.x-start.crop.x);
+    }
 
-if(mode==="right"){
-  crop.w = Math.max(60, start.crop.w+dx);
-}
-    
+    if(mode==="right"){
+      crop.w=Math.max(60,start.crop.w+dx);
+    }
+
     draw();
   };
 
   canvas.onpointerup = e => {
-  mode = null;
-  if (canvas.hasPointerCapture(e.pointerId)) {
-    canvas.releasePointerCapture(e.pointerId);
-  }
-};
+    mode = null;
+    if(canvas.hasPointerCapture(e.pointerId)){
+      canvas.releasePointerCapture(e.pointerId);
+    }
+  };
 
   canvas.onpointercancel = () => mode = null;
 
-  canvas.onwheel=e=>{
+  canvas.onwheel = e => {
     e.preventDefault();
-    scale*=e.deltaY>0?0.95:1.05;
+    scale *= e.deltaY>0 ? 0.95 : 1.05;
     draw();
   };
 
   let pinchStart = null;
 
-canvas.addEventListener("touchstart", e => {
-  if (e.touches.length === 2) {
-    const a = e.touches[0];
-    const b = e.touches[1];
-    pinchStart = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
-  }
-}, { passive:false });
+  canvas.addEventListener("touchstart", e => {
+    if(e.touches.length===2){
+      const a=e.touches[0], b=e.touches[1];
+      pinchStart=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+    }
+  }, {passive:false});
 
-canvas.addEventListener("touchmove", e => {
-  if (e.touches.length !== 2 || !pinchStart) return;
+  canvas.addEventListener("touchmove", e => {
+    if(e.touches.length!==2 || !pinchStart) return;
 
-  e.preventDefault();
+    e.preventDefault();
 
-  const a = e.touches[0];
-  const b = e.touches[1];
+    const a=e.touches[0], b=e.touches[1];
+    const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 
-  const d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    scale*=d/pinchStart;
+    pinchStart=d;
 
-  scale *= d/pinchStart;
-  pinchStart = d;
+    draw();
+  }, {passive:false});
 
-  draw();
+  canvas.addEventListener("touchend", ()=>pinchStart=null);
+  canvas.addEventListener("touchcancel", ()=>pinchStart=null);
 
-}, { passive:false });
-
-canvas.addEventListener("touchend", () => pinchStart = null);
-canvas.addEventListener("touchcancel", () => pinchStart = null);
-  
-  rotateBtn.onclick=()=>{
+  rotateBtn.onclick = () => {
     rotation=(rotation+90)%360;
     draw();
   };
 
-  cancelCrop.onclick=()=>{
+  cancelCrop.onclick = () => {
+    cropBox.classList.remove("show");
     cropBox.style.display="none";
   };
 
   useCrop.onclick = () => {
 
-  const out = document.createElement("canvas");
-  out.width = crop.w;
-  out.height = crop.h;
+    const out=document.createElement("canvas");
+    out.width=crop.w;
+    out.height=crop.h;
 
-  const o = out.getContext("2d");
+    const o=out.getContext("2d");
 
-  const isPNG =
-    foto.file?.type === "image/png" ||
-    foto.url.toLowerCase().endsWith(".png");
+    const isPNG =
+      foto.file?.type==="image/png" ||
+      foto.url.toLowerCase().endsWith(".png");
 
-  if (!isPNG) {
-    o.fillStyle = "#fff";
-    o.fillRect(0, 0, out.width, out.height);
-  }
+    if(!isPNG){
+      o.fillStyle="#fff";
+      o.fillRect(0,0,out.width,out.height);
+    }
 
-  // El recuadro pasa a ser el origen del nuevo canvas
-  o.translate(-crop.x, -crop.y);
+    o.translate(-crop.x,-crop.y);
+    o.translate(imgX,imgY);
+    o.rotate(rotation*Math.PI/180);
+    o.scale(scale,scale);
 
-  // Aplicamos EXACTAMENTE la misma transformación
-  o.translate(imgX, imgY);
-  o.rotate(rotation * Math.PI / 180);
-  o.scale(scale, scale);
+    o.drawImage(img,-img.width/2,-img.height/2);
 
-  o.drawImage(img, -img.width/2, -img.height/2);
+    out.toBlob(blob=>{
 
-  out.toBlob(blob => {
+      const type=isPNG?"image/png":"image/jpeg";
+      const ext=isPNG?"png":"jpg";
 
-    const type = isPNG ? "image/png" : "image/jpeg";
-    const ext  = isPNG ? "png" : "jpg";
+      const file=new File([blob],`foto_${Date.now()}.${ext}`,{type});
 
-    const file = new File(
-      [blob],
-      `foto_${Date.now()}.${ext}`,
-      { type }
-    );
+      if(foto.existing) gallery[index]=file;
+      else newFiles[index-gallery.length]=file;
 
-    if (foto.existing) gallery[index] = file;
-    else newFiles[index - gallery.length] = file;
+      cropBox.classList.remove("show");
+      cropBox.style.display="none";
 
-    cropBox.style.display = "none";
-    drawPreview();
+      drawPreview();
 
-  }, type, isPNG ? undefined : 0.92);
+    }, type, isPNG?undefined:0.92);
 
-};
+  };
+
+}
 
   function dist(ax,ay,bx,by){
     return Math.hypot(ax-bx,ay-by);
