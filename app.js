@@ -763,7 +763,7 @@ canvas.ontouchcancel = () => pinchStart = null;
   out.toBlob(blob => {
 
     const type = isPNG ? "image/png" : "image/jpeg";
-    const ext = isPNG ? "png" : "jpg";
+    const ext  = isPNG ? "png" : "jpg";
 
     const file = new File([blob], `foto_${Date.now()}.${ext}`, { type });
 
@@ -778,11 +778,14 @@ canvas.ontouchcancel = () => pinchStart = null;
   }, type, isPNG ? undefined : 0.92);
 };
 
-useCrop.onclick = e => {
+// FORZAR QUE EL BOTÓN FUNCIONE
+useCrop.type = "button";
+
+useCrop.addEventListener("click", e => {
   e.preventDefault();
   e.stopPropagation();
   applyCrop();
-};
+});
 
 useCrop.onpointerup = e => {
   e.preventDefault();
