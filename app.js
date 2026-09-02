@@ -475,6 +475,7 @@ function openCropper(index, foto){
 
   const cropBox = bg.querySelector("#cropper");
   const canvas = bg.querySelector("#cropCanvas");
+  canvas.style.touchAction = "none";
   const ctx = canvas.getContext("2d");
 
   const rotateBtn = bg.querySelector("#rotateBtn");
@@ -720,48 +721,53 @@ canvas.ontouchcancel = () => pinchStart = null;
     cropBox.style.display="none";
   };
 
-  useCrop.onclick = () => {
+  const applyCrop = () => {
 
-    const out=document.createElement("canvas");
-    out.width=crop.w;
-    out.height=crop.h;
+  const out = document.createElement("canvas");
+  out.width = crop.w;
+  out.height = crop.h;
 
-    const o=out.getContext("2d");
+  const o = out.getContext("2d");
 
-    const isPNG =
-      foto.file?.type==="image/png" ||
-      foto.url.toLowerCase().endsWith(".png");
+  const isPNG =
+    foto.file?.type === "image/png" ||
+    foto.url.toLowerCase().endsWith(".png");
 
-    if(!isPNG){
-      o.fillStyle="#fff";
-      o.fillRect(0,0,out.width,out.height);
-    }
+  if (!isPNG) {
+    o.fillStyle = "#fff";
+    o.fillRect(0, 0, out.width, out.height);
+  }
 
-    o.translate(-crop.x,-crop.y);
-    o.translate(imgX,imgY);
-    o.rotate(rotation*Math.PI/180);
-    o.scale(scale,scale);
+  o.translate(-crop.x, -crop.y);
+  o.translate(imgX, imgY);
+  o.rotate(rotation * Math.PI / 180);
+  o.scale(scale, scale);
 
-    o.drawImage(img,-img.width/2,-img.height/2);
+  o.drawImage(img, -img.width / 2, -img.height / 2);
 
-    out.toBlob(blob=>{
+  out.toBlob(blob => {
 
-      const type=isPNG?"image/png":"image/jpeg";
-      const ext=isPNG?"png":"jpg";
+    const type = isPNG ? "image/png" : "image/jpeg";
+    const ext = isPNG ? "png" : "jpg";
 
-      const file=new File([blob],`foto_${Date.now()}.${ext}`,{type});
+    const file = new File([blob], `foto_${Date.now()}.${ext}`, { type });
 
-      if(foto.existing) gallery[index]=file;
-      else newFiles[index-gallery.length]=file;
+    if (foto.existing) gallery[index] = file;
+    else newFiles[index - gallery.length] = file;
 
-      cropBox.classList.remove("show");
-      cropBox.style.display="none";
+    cropBox.classList.remove("show");
+    cropBox.style.display = "none";
 
-      drawPreview();
+    drawPreview();
 
-    }, type, isPNG?undefined:0.92);
+  }, type, isPNG ? undefined : 0.92);
+};
 
-  };
+useCrop.onclick = applyCrop;
+useCrop.ontouchend = e => {
+  e.preventDefault();
+  applyCrop();
+};
 
 }
   
