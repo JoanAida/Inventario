@@ -1,6 +1,24 @@
 [
   {
-    "name": "Caña pesca",
+    "name": "srtnse",
+    "cat": "Pesca",
+    "price": 50,
+    "desc": "tymdrfthm",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788342936787.jpg",
+    "gallery": [],
+    "fields": [
+      {
+        "name": "rfnj",
+        "value": "rfynm"
+      },
+      {
+        "name": "rfm",
+        "value": "rsfmn"
+      }
+    ]
+  },
+  {
+    "name": "CaÃ±a pesca",
     "cat": "Pesca",
     "price": 25,
     "desc": "Ukiyo 100 230",
@@ -8,11 +26,11 @@
     "gallery": [],
     "fields": [
       {
-        "name": "Tamaño",
+        "name": "TamaÃ±o",
         "value": "230 cm"
       },
       {
-        "name": "Tamañp cerrado",
+        "name": "TamaÃ±p cerrado",
         "value": "110 cm"
       }
     ]
