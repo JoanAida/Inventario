@@ -1,5 +1,16 @@
 [
   {
+    "name": "sb<wsa",
+    "cat": "Camping",
+    "price": 7896,
+    "desc": "fyughnfvb ",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343429811.png",
+    "gallery": [
+      "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343437745.png"
+    ],
+    "fields": []
+  },
+  {
     "name": "Caña pesca",
     "cat": "Pesca",
     "price": 25,
