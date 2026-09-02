@@ -1,6 +1,6 @@
 const API = "https://inventario-api.joanvalenzuelabusquets.workers.dev";
 
-const CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
+let CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
 let filter = "Todos";
 let editIndex = -1;
 
@@ -16,6 +16,7 @@ async function saveDB() {
     },
     body: JSON.stringify({
       action: "saveInventory",
+      categories: CATS.slice(1),
       products
     })
   });
@@ -33,7 +34,14 @@ async function loadDB() {
     return;
   }
 
-  products = await res.json();
+  const data = await res.json();
+
+  products = data.products || [];
+
+  CATS = [
+    "Todos",
+    ...(data.categories || ["Camping", "Pesca", "Tecnología"])
+  ];
 }
 
 async function uploadImage(file) {
@@ -101,11 +109,22 @@ function render() {
   <div class="sheet">
     <h2>Ajustes</h2>
 
-    <label>Apariencia</label>
+   <label>Apariencia</label>
 
-    <div class="row">
+<div class="row">
   <button class="btn sec" id="dark">🌙 Oscuro</button>
   <button class="btn pri" id="light">☀️ Claro</button>
+</div>
+
+<hr style="margin:18px 0">
+
+<label>Categorías</label>
+
+<div id="catList"></div>
+
+<div class="row" style="margin-top:10px">
+  <input id="newCat" placeholder="Nueva categoría" style="flex:1">
+  <button class="btn pri" id="addCat">+</button>
 </div>
 
 <button class="btn sec" id="closeSettings" style="margin-top:12px">
@@ -132,6 +151,30 @@ light.onclick = () => {
   document.body.classList.add("light");
 };
 
+drawCatManager();
+
+addCat.onclick = async () => {
+
+  const nombre = newCat.value.trim();
+
+  if (!nombre) return;
+
+  if (CATS.includes(nombre)) {
+    alert("Ya existe esa categoría");
+    return;
+  }
+
+  CATS.push(nombre);
+
+  await saveDB();
+
+  drawCategories();
+  drawCatManager();
+
+  newCat.value = "";
+
+};
+  
 }
 
 function drawCategories() {
@@ -150,6 +193,53 @@ function drawCategories() {
 
     cats.appendChild(chip);
   });
+}
+
+function drawCatManager() {
+
+  const list = document.getElementById("catList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  CATS.slice(1).forEach(cat => {
+
+    const row = document.createElement("div");
+
+    row.className = "row";
+    row.style.margin = "6px 0";
+
+    row.innerHTML = `
+      <div style="flex:1">${cat}</div>
+      <button class="btn sec">🗑️</button>
+    `;
+
+    row.querySelector("button").onclick = async () => {
+
+      if (products.some(p => p.cat === cat)) {
+        alert("Hay productos usando esta categoría");
+        return;
+      }
+
+      if (!confirm("¿Eliminar categoría?")) return;
+
+      CATS = CATS.filter(c => c !== cat);
+
+      if (filter === cat) filter = "Todos";
+
+      await saveDB();
+
+      drawCategories();
+      drawCatManager();
+      drawProducts();
+
+    };
+
+    list.appendChild(row);
+
+  });
+
 }
 
 function drawProducts() {
@@ -477,7 +567,7 @@ const drawPreview = () => {
     file,
     url: URL.createObjectURL(file),
     existing: false,
-    bg: file.bg || "auto"
+    bg: file.bg || "transparent"
   }))
 ];
 
@@ -963,10 +1053,10 @@ const allPhotos = [
   desc: eDesc.value,
 
   photo: allPhotos[0]?.url || "",
-  photoBg: allPhotos[0]?.bg || "transparent",
+  photoBg: allPhotos[0]?.bg ?? "transparent",
 
   gallery: allPhotos.slice(1).map(f => f.url),
-  galleryBg: allPhotos.slice(1).map(f => f.bg || "transparent"),
+  galleryBg: allPhotos.slice(1).map(f => f.bg ?? "transparent"),
 
   fields
 };
