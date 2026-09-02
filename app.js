@@ -661,14 +661,29 @@ function openCropper(index, foto){
     draw();
   };
 
-  canvas.onpointerup = e => {
-    mode = null;
+canvas.onpointerup = e => {
+  mode = null;
+
+  try{
     if(canvas.hasPointerCapture(e.pointerId)){
       canvas.releasePointerCapture(e.pointerId);
     }
-  };
+  }catch{}
+};
 
-  canvas.onpointercancel = () => mode = null;
+canvas.onpointerleave = () => {
+  mode = null;
+};
+
+canvas.onpointercancel = e => {
+  mode = null;
+
+  try{
+    if(canvas.hasPointerCapture(e.pointerId)){
+      canvas.releasePointerCapture(e.pointerId);
+    }
+  }catch{}
+};
 
   canvas.onwheel = e => {
     e.preventDefault();
@@ -763,9 +778,15 @@ canvas.ontouchcancel = () => pinchStart = null;
   }, type, isPNG ? undefined : 0.92);
 };
 
-useCrop.onclick = applyCrop;
-useCrop.ontouchend = e => {
+useCrop.onclick = e => {
   e.preventDefault();
+  e.stopPropagation();
+  applyCrop();
+};
+
+useCrop.onpointerup = e => {
+  e.preventDefault();
+  e.stopPropagation();
   applyCrop();
 };
 
