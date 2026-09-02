@@ -6,6 +6,17 @@
   ],
   "products": [
     {
+      "name": "Jibionera 2.5",
+      "cat": "Camping",
+      "price": 3.49,
+      "desc": "",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788386618848.png",
+      "photoBg": "transparent",
+      "gallery": [],
+      "galleryBg": [],
+      "fields": []
+    },
+    {
       "name": "",
       "cat": "Camping",
       "price": 0,
