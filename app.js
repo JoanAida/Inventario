@@ -490,54 +490,146 @@ function openCropper(index, foto){
 
   const img = new Image();
 
+  let scale = 1;
+  let rotation = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  const FRAME = 280;
+
   img.onload = () => {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.drawImage(img, 0, 0);
+
     cropBox.style.display = "block";
+
+    canvas.width = 340;
+    canvas.height = 420;
+
+    const fit = FRAME / Math.max(img.width, img.height);
+    scale = fit;
+    offsetX = canvas.width / 2;
+    offsetY = 160;
+
+    draw();
+
   };
 
   img.src = foto.url;
 
-  rotateBtn.onclick = () => {
-    const tmp = document.createElement("canvas");
-    tmp.width = canvas.height;
-    tmp.height = canvas.width;
+  function draw(){
 
-    const t = tmp.getContext("2d");
-    t.translate(tmp.width, 0);
-    t.rotate(Math.PI / 2);
-    t.drawImage(canvas, 0, 0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    canvas.width = tmp.width;
-    canvas.height = tmp.height;
-    ctx.drawImage(tmp, 0, 0);
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.save();
+
+    ctx.translate(offsetX, offsetY);
+    ctx.rotate(rotation * Math.PI/180);
+    ctx.scale(scale, scale);
+
+    ctx.drawImage(
+      img,
+      -img.width/2,
+      -img.height/2
+    );
+
+    ctx.restore();
+
+    const x = (canvas.width-FRAME)/2;
+    const y = 20;
+
+    ctx.fillStyle = "rgba(0,0,0,.55)";
+    ctx.fillRect(0,0,canvas.width,y);
+    ctx.fillRect(0,y,x,FRAME);
+    ctx.fillRect(x+FRAME,y,canvas.width,FRAME);
+    ctx.fillRect(0,y+FRAME,canvas.width,canvas.height);
+
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x,y,FRAME,FRAME);
+
+  }
+
+  let dragging = false;
+  let sx = 0;
+  let sy = 0;
+
+  canvas.onpointerdown = e=>{
+    dragging = true;
+    sx = e.clientX;
+    sy = e.clientY;
   };
 
-  cancelCrop.onclick = () => {
+  canvas.onpointermove = e=>{
+    if(!dragging) return;
+
+    offsetX += e.clientX - sx;
+    offsetY += e.clientY - sy;
+
+    sx = e.clientX;
+    sy = e.clientY;
+
+    draw();
+  };
+
+  canvas.onpointerup = ()=> dragging = false;
+  canvas.onpointerleave = ()=> dragging = false;
+
+  canvas.onwheel = e=>{
+    e.preventDefault();
+
+    scale *= e.deltaY > 0 ? 0.95 : 1.05;
+    scale = Math.max(0.2, Math.min(scale, 5));
+
+    draw();
+  };
+
+  rotateBtn.onclick = ()=>{
+    rotation = (rotation + 90) % 360;
+    draw();
+  };
+
+  cancelCrop.onclick = ()=>{
     cropBox.style.display = "none";
   };
 
-  useCrop.onclick = () => {
+  useCrop.onclick = ()=>{
 
-    canvas.toBlob(blob => {
+    const out = document.createElement("canvas");
+    out.width = FRAME;
+    out.height = FRAME;
+
+    const o = out.getContext("2d");
+
+    o.translate(FRAME/2, FRAME/2);
+    o.rotate(rotation * Math.PI/180);
+    o.scale(scale, scale);
+
+    o.drawImage(
+      img,
+      -(offsetX-(canvas.width-FRAME)/2-FRAME/2)/scale - img.width/2,
+      -(offsetY-20-FRAME/2)/scale - img.height/2
+    );
+
+    out.toBlob(blob=>{
 
       const file = new File(
         [blob],
         `foto_${Date.now()}.jpg`,
-        { type: "image/jpeg" }
+        {type:"image/jpeg"}
       );
 
-      if (foto.existing) {
+      if(foto.existing){
         gallery[index] = file;
-      } else {
-        newFiles[index - gallery.length] = file;
+      }else{
+        newFiles[index-gallery.length] = file;
       }
 
       cropBox.style.display = "none";
       drawPreview();
 
-    }, "image/jpeg", 0.92);
+    },"image/jpeg",0.92);
 
   };
 
