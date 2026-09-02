@@ -352,11 +352,29 @@ const p = index >= 0 ? products[index] : {
 <div id="galleryPreview" class="gallery"></div>
 <div id="cropper" class="cropper" style="display:none">
   <canvas id="cropCanvas"></canvas>
- <div class="row" style="margin-top:12px">
-  <button class="btn sec" id="rotateBtn">↻ Girar</button>
-  <button class="btn sec" id="bgBtn">🖼 Fondo</button>
-</div>
 
+  <div class="row" style="margin-top:12px">
+    <button class="btn sec" id="rotateBtn">↻ Girar</button>
+    <button class="btn sec" id="bgBtn">🖼 Fondo</button>
+  </div>
+
+  <div id="bgPanel" style="display:none;margin-top:10px">
+    <div class="row" style="align-items:center">
+      <button class="colorPreset" data-color="#FFFFFF" style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+      <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+      <button class="colorPreset" data-color="#1F2937" style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+      <input type="color" id="customColor" value="#ffffff" style="width:42px;height:34px;padding:0;border:none;background:none">
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn sec" id="cancelCrop">Cancelar</button>
+    <button class="btn pri" id="useCrop">Usar</button>
+  </div>
+</div>
  <div id="bgPanel" style="display:none;margin-top:10px">
   <div class="row" style="align-items:center">
     <button class="colorPreset" data-color="#FFFFFF" style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
