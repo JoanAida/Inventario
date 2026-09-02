@@ -4,6 +4,17 @@
     "cat": "Camping",
     "price": 0,
     "desc": "",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788360129957.png",
+    "photoBg": "#FFFFFF",
+    "gallery": [],
+    "galleryBg": [],
+    "fields": []
+  },
+  {
+    "name": "",
+    "cat": "Camping",
+    "price": 0,
+    "desc": "",
     "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788358792979.jpg",
     "gallery": [],
     "fields": []
