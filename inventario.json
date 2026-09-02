@@ -4,8 +4,14 @@
     "cat": "Camping",
     "price": 25,
     "desc": "Jdbdbs",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/IMG_7827.png",
-    "gallery": []
+    "photo": "",
+    "gallery": [],
+    "fields": [
+      {
+        "name": "Tamaño",
+        "value": "6mm"
+      }
+    ]
   },
   {
     "name": "ryjxnt",
