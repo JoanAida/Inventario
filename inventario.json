@@ -1,5 +1,19 @@
 [
   {
+    "name": "aerbse",
+    "cat": "Camping",
+    "price": 65,
+    "desc": "ntynmd",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Colch%C3%B3n%20hinchable%202%20personas%20200x140%20cm.%20Quechua%20Air%20Comfort%202.png",
+    "gallery": [],
+    "fields": [
+      {
+        "name": "Medidas",
+        "value": "50"
+      }
+    ]
+  },
+  {
     "name": "ryjxnt",
     "cat": "Camping",
     "price": 45,
