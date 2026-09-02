@@ -740,8 +740,10 @@ canvas.ontouchcancel = () => pinchStart = null;
 
   const applyCrop = () => {
   const out = document.createElement("canvas");
-  out.width = crop.w;
-  out.height = crop.h;
+  const ratio = img.naturalWidth / (img.width * scale);
+
+out.width = Math.round(crop.w * ratio);
+out.height = Math.round(crop.h * ratio);
 
   const o = out.getContext("2d");
 
@@ -750,16 +752,19 @@ canvas.ontouchcancel = () => pinchStart = null;
     foto.url.toLowerCase().endsWith(".png");
 
   if (!isPNG) {
-    o.fillStyle = "#fff";
-    o.fillRect(0, 0, out.width, out.height);
-  }
+  o.fillStyle = "#fff";
+  o.fillRect(0, 0, out.width, out.height);
+}
 
-  o.translate(-crop.x, -crop.y);
-  o.translate(imgX, imgY);
-  o.rotate(rotation * Math.PI / 180);
-  o.scale(scale, scale);
+// 👇 AÑADE ESTA LÍNEA JUSTO AQUÍ
+o.scale(ratio, ratio);
 
-  o.drawImage(img, -img.width / 2, -img.height / 2);
+o.translate(-crop.x, -crop.y);
+o.translate(imgX, imgY);
+o.rotate(rotation * Math.PI / 180);
+o.scale(scale, scale);
+
+o.drawImage(img, -img.width / 2, -img.height / 2);
 
   out.toBlob((blob) => {
     if (!blob) {
