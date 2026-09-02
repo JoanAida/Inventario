@@ -354,6 +354,15 @@ const p = index >= 0 ? products[index] : {
 <input id="ePhotos" type="file" accept="image/*" multiple>
 
 <div id="galleryPreview" class="gallery"></div>
+<div id="cropper" class="cropper" style="display:none">
+  <canvas id="cropCanvas"></canvas>
+
+  <div class="row" style="margin-top:12px">
+    <button class="btn sec" id="rotateBtn">↻ Girar</button>
+    <button class="btn sec" id="cancelCrop">Cancelar</button>
+    <button class="btn pri" id="useCrop">Usar</button>
+  </div>
+</div>
 
       <div class="row" style="margin-top:18px">
         <button class="btn sec" id="cancel">Cancelar</button>
@@ -430,9 +439,114 @@ addFieldBtn.onclick = () => {
   fields.push({ name:"", value:"" });
   drawFields();
 };
+const cropBox = bg.querySelector("#cropper");
+const canvas = bg.querySelector("#cropCanvas");
+const ctx = canvas.getContext("2d");
+
+let img = new Image();
+let rotation = 0;
+let crop = { x:0, y:0, w:0, h:0 };
+
+function drawCrop(){
+
+  const w = img.width;
+  const h = img.height;
+
+  canvas.width = rotation % 180 ? h : w;
+  canvas.height = rotation % 180 ? w : h;
+
+  ctx.save();
+
+  if(rotation===90){
+    ctx.translate(canvas.width,0);
+    ctx.rotate(Math.PI/2);
+  }
+  if(rotation===180){
+    ctx.translate(canvas.width,canvas.height);
+    ctx.rotate(Math.PI);
+  }
+  if(rotation===270){
+    ctx.translate(0,canvas.height);
+    ctx.rotate(-Math.PI/2);
+  }
+
+  ctx.drawImage(img,0,0);
+  ctx.restore();
+
+  if(!crop.w){
+    crop = {
+      x: canvas.width*0.1,
+      y: canvas.height*0.1,
+      w: canvas.width*0.8,
+      h: canvas.height*0.8
+    };
+  }
+
+  ctx.strokeStyle="#00ff88";
+  ctx.lineWidth=3;
+  ctx.strokeRect(crop.x,crop.y,crop.w,crop.h);
+}
+
 ePhotos.onchange = () => {
-  newFiles = [...ePhotos.files];
-  drawPreview();
+
+  const file = ePhotos.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = e=>{
+    img.onload = ()=>{
+      rotation=0;
+      crop={x:0,y:0,w:0,h:0};
+      cropBox.style.display="block";
+      drawCrop();
+    };
+    img.src=e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+
+};
+
+rotateBtn.onclick=()=>{
+  rotation=(rotation+90)%360;
+  crop={x:0,y:0,w:0,h:0};
+  drawCrop();
+};
+
+cancelCrop.onclick=()=>{
+  cropBox.style.display="none";
+  ePhotos.value="";
+};
+
+useCrop.onclick=()=>{
+
+  const out=document.createElement("canvas");
+  out.width=crop.w;
+  out.height=crop.h;
+
+  out.getContext("2d").drawImage(
+    canvas,
+    crop.x,crop.y,crop.w,crop.h,
+    0,0,crop.w,crop.h
+  );
+
+  out.toBlob(blob=>{
+
+    const finalFile=new File(
+      [blob],
+      ePhotos.files[0].name,
+      {type:"image/jpeg"}
+    );
+
+    newFiles=[finalFile];
+
+    drawPreview();
+
+    cropBox.style.display="none";
+
+  },"image/jpeg",0.9);
+
 };
 
   btnCancel.onclick = ()=>bg.remove();
