@@ -375,26 +375,27 @@ textarea{
   inset:0;
   background:#111;
   z-index:9999;
-  display:flex;
+  display:none;
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  padding:20px;
+  padding:16px;
 }
 
 .cropper canvas{
-  width:min(92vw,340px);
-  border-radius:16px;
+  width:min(92vw,420px);
+  height:auto;
+  border-radius:18px;
   touch-action:none;
-  cursor:grab;
   user-select:none;
-}
-
-.cropper .row{
-  width:min(92vw,340px);
-  margin-top:18px;
+  cursor:grab;
 }
 
 .cropper canvas:active{
   cursor:grabbing;
+}
+
+.cropper .row{
+  width:min(92vw,420px);
+  margin-top:16px;
 }
