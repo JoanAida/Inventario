@@ -224,7 +224,22 @@ function openViewer(index) {
       <div class="muted">${p.cat}</div>
       <h3>${p.price.toFixed(2)} €</h3>
 
-      <p>${p.desc || "Sin descripción"}</p>
+<p>${p.desc || "Sin descripción"}</p>
+
+${
+  (p.fields && p.fields.length)
+    ? `
+      <div class="customFields">
+        ${p.fields.map(f => `
+          <div class="fieldRow">
+            <div class="fieldName">${f.name}</div>
+            <div class="fieldValue">${f.value}</div>
+          </div>
+        `).join("")}
+      </div>
+    `
+    : ""
+}
 
       <div class="row" style="margin-top:20px">
         <button class="btn pri" id="edit">Editar</button>
@@ -327,10 +342,18 @@ const p = index >= 0 ? products[index] : {
       <label>Descripción</label>
       <textarea id="eDesc">${p.desc}</textarea>
 
-      <label>Fotos</label>
-      <input id="ePhotos" type="file" accept="image/*" multiple>
+    <label>Campos personalizados</label>
 
-      <div id="galleryPreview" class="gallery"></div>
+<div id="fieldsContainer"></div>
+
+<button type="button" class="btn sec" id="addField" style="margin:10px 0">
+  + Añadir campo
+</button>
+
+<label>Fotos</label>
+<input id="ePhotos" type="file" accept="image/*" multiple>
+
+<div id="galleryPreview" class="gallery"></div>
 
       <div class="row" style="margin-top:18px">
         <button class="btn sec" id="cancel">Cancelar</button>
@@ -347,12 +370,47 @@ const p = index >= 0 ? products[index] : {
   const eDesc = bg.querySelector("#eDesc");
   const ePhotos = bg.querySelector("#ePhotos");
   const preview = bg.querySelector("#galleryPreview");
+  const fieldsContainer = bg.querySelector("#fieldsContainer");
+  const addFieldBtn = bg.querySelector("#addField");
   const btnSave = bg.querySelector("#save");
   const btnCancel = bg.querySelector("#cancel");
 
   let gallery = [...(p.gallery || [])];
   let newFiles = [];
   let fields = [...(p.fields || [])];
+
+  function drawFields() {
+
+  fieldsContainer.innerHTML = "";
+
+  fields.forEach((field, i) => {
+
+    const div = document.createElement("div");
+
+    div.className = "row";
+
+    div.style.marginBottom = "8px";
+
+    div.innerHTML = `
+      <input class="fName" placeholder="Campo" value="${field.name}" style="flex:1">
+      <input class="fValue" placeholder="Valor" value="${field.value}" style="flex:1">
+      <button class="btn sec remove">✕</button>
+    `;
+
+    div.querySelector(".fName").oninput = e => fields[i].name = e.target.value;
+    div.querySelector(".fValue").oninput = e => fields[i].value = e.target.value;
+
+    div.querySelector(".remove").onclick = () => {
+      fields.splice(i,1);
+      drawFields();
+    };
+
+    fieldsContainer.appendChild(div);
+
+  });
+
+}
+  
 const drawPreview = () => {
   preview.innerHTML = "";
 
@@ -366,7 +424,12 @@ const drawPreview = () => {
 };
 
 drawPreview();
+drawFields();
 
+addFieldBtn.onclick = () => {
+  fields.push({ name:"", value:"" });
+  drawFields();
+};
 ePhotos.onchange = () => {
   newFiles = [...ePhotos.files];
   drawPreview();
