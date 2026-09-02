@@ -756,10 +756,6 @@ function openCropper(index, foto){
 
 }
 
-  function dist(ax,ay,bx,by){
-    return Math.hypot(ax-bx,ay-by);
-  }
-
 }
   
 drawFields();
