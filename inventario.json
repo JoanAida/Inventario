@@ -13,7 +13,13 @@
     "price": 25,
     "desc": "Bckdksns",
     "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/IMG_7823.png",
-    "gallery": []
+    "gallery": [],
+    "fields": [
+      {
+        "name": "Medidas",
+        "value": "15 x 10 cm"
+      }
+    ]
   },
   {
     "name": "tienda",
