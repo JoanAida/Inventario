@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "name": "tienda",
+    "cat": "Camping",
+    "price": 350,
+    "desc": "dfbfg",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%201.png",
+    "gallery": [
+      "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%202.png",
+      "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%203.png"
+    ]
+  }
+]
