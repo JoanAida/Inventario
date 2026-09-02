@@ -1,23 +1,5 @@
 [
   {
-    "name": "aerbse",
-    "cat": "Camping",
-    "price": 65,
-    "desc": "ntynmd",
-    "photo": "",
-    "gallery": [],
-    "fields": [
-      {
-        "name": "Medidas",
-        "value": "50"
-      },
-      {
-        "name": "Peso",
-        "value": "5kg"
-      }
-    ]
-  },
-  {
     "name": "ryjxnt",
     "cat": "Camping",
     "price": 45,
