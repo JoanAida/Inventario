@@ -483,24 +483,31 @@ function openCropper(index, foto){
 
   const img = new Image();
 
+  const FRAME = 280;
+
   let scale = 1;
   let rotation = 0;
-  let offsetX = 0;
-  let offsetY = 0;
+  let x = 0;
+  let y = 0;
 
-  const FRAME = 280;
+  let pointers = new Map();
+  let startDist = 0;
+  let startScale = 1;
+  let lastX = 0;
+  let lastY = 0;
 
   img.onload = () => {
 
-    cropBox.style.display = "block";
+    cropBox.style.display = "flex";
 
-    canvas.width = 340;
-    canvas.height = 420;
+    const size = Math.min(window.innerWidth, 420);
 
-    const fit = FRAME / Math.max(img.width, img.height);
-    scale = fit;
-    offsetX = canvas.width / 2;
-    offsetY = 160;
+    canvas.width = size;
+    canvas.height = size + 70;
+
+    scale = FRAME / Math.max(img.width, img.height);
+    x = canvas.width / 2;
+    y = FRAME / 2 + 20;
 
     draw();
 
@@ -517,119 +524,152 @@ function openCropper(index, foto){
 
     ctx.save();
 
-    ctx.translate(offsetX, offsetY);
-    ctx.rotate(rotation * Math.PI/180);
-    ctx.scale(scale, scale);
+    ctx.translate(x,y);
+    ctx.rotate(rotation*Math.PI/180);
+    ctx.scale(scale,scale);
 
-    ctx.drawImage(
-      img,
-      -img.width/2,
-      -img.height/2
-    );
+    ctx.drawImage(img,-img.width/2,-img.height/2);
 
     ctx.restore();
 
-    const x = (canvas.width-FRAME)/2;
-    const y = 20;
+    const fx=(canvas.width-FRAME)/2;
+    const fy=20;
 
-    ctx.fillStyle = "rgba(0,0,0,.55)";
-    ctx.fillRect(0,0,canvas.width,y);
-    ctx.fillRect(0,y,x,FRAME);
-    ctx.fillRect(x+FRAME,y,canvas.width,FRAME);
-    ctx.fillRect(0,y+FRAME,canvas.width,canvas.height);
+    ctx.fillStyle="rgba(0,0,0,.55)";
+    ctx.fillRect(0,0,canvas.width,fy);
+    ctx.fillRect(0,fy,fx,FRAME);
+    ctx.fillRect(fx+FRAME,fy,canvas.width,FRAME);
+    ctx.fillRect(0,fy+FRAME,canvas.width,canvas.height);
 
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x,y,FRAME,FRAME);
-
+    ctx.strokeStyle="#fff";
+    ctx.lineWidth=2;
+    ctx.strokeRect(fx,fy,FRAME,FRAME);
   }
 
-  let dragging = false;
-  let sx = 0;
-  let sy = 0;
+  function distance(a,b){
+    return Math.hypot(a.x-b.x,a.y-b.y);
+  }
 
-  canvas.onpointerdown = e=>{
-    dragging = true;
-    sx = e.clientX;
-    sy = e.clientY;
+  canvas.onpointerdown=e=>{
+    canvas.setPointerCapture(e.pointerId);
+
+    pointers.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
+
+    if(pointers.size===1){
+      lastX=e.offsetX;
+      lastY=e.offsetY;
+    }
+
+    if(pointers.size===2){
+      const pts=[...pointers.values()];
+      startDist=distance(pts[0],pts[1]);
+      startScale=scale;
+    }
   };
 
-  canvas.onpointermove = e=>{
-    if(!dragging) return;
+  canvas.onpointermove=e=>{
 
-    offsetX += e.clientX - sx;
-    offsetY += e.clientY - sy;
+    if(!pointers.has(e.pointerId)) return;
 
-    sx = e.clientX;
-    sy = e.clientY;
+    pointers.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
 
-    draw();
+    if(pointers.size===1){
+
+      x+=e.offsetX-lastX;
+      y+=e.offsetY-lastY;
+
+      lastX=e.offsetX;
+      lastY=e.offsetY;
+
+      draw();
+    }
+
+    if(pointers.size===2){
+
+      const pts=[...pointers.values()];
+      const d=distance(pts[0],pts[1]);
+
+      scale=startScale*(d/startDist);
+      scale=Math.max(0.2,Math.min(scale,5));
+
+      draw();
+    }
   };
 
-  canvas.onpointerup = ()=> dragging = false;
-  canvas.onpointerleave = ()=> dragging = false;
+  function endPointer(e){
+    pointers.delete(e.pointerId);
 
-  canvas.onwheel = e=>{
+    if(pointers.size===1){
+      const p=[...pointers.values()][0];
+      lastX=p.x;
+      lastY=p.y;
+    }
+  }
+
+  canvas.onpointerup=endPointer;
+  canvas.onpointercancel=endPointer;
+
+  canvas.onwheel=e=>{
     e.preventDefault();
 
-    scale *= e.deltaY > 0 ? 0.95 : 1.05;
-    scale = Math.max(0.2, Math.min(scale, 5));
+    scale*=e.deltaY>0?0.95:1.05;
+    scale=Math.max(0.2,Math.min(scale,5));
 
     draw();
   };
 
-  rotateBtn.onclick = ()=>{
-    rotation = (rotation + 90) % 360;
+  rotateBtn.onclick=()=>{
+    rotation=(rotation+90)%360;
     draw();
   };
 
-  cancelCrop.onclick = ()=>{
-    cropBox.style.display = "none";
+  cancelCrop.onclick=()=>{
+    cropBox.style.display="none";
   };
 
-  useCrop.onclick = ()=>{
+  useCrop.onclick=()=>{
 
-    const out = document.createElement("canvas");
-    out.width = FRAME;
-    out.height = FRAME;
+    const out=document.createElement("canvas");
+    out.width=FRAME;
+    out.height=FRAME;
 
-    const o = out.getContext("2d");
+    const o=out.getContext("2d");
 
-    o.translate(FRAME/2, FRAME/2);
-    o.rotate(rotation * Math.PI/180);
-    o.scale(scale, scale);
+    o.translate(FRAME/2,FRAME/2);
+    o.rotate(rotation*Math.PI/180);
+    o.scale(scale,scale);
+
+    const fx=(canvas.width-FRAME)/2;
+    const fy=20;
 
     o.drawImage(
       img,
-      -(offsetX-(canvas.width-FRAME)/2-FRAME/2)/scale - img.width/2,
-      -(offsetY-20-FRAME/2)/scale - img.height/2
+      -(x-fx-FRAME/2)/scale-img.width/2,
+      -(y-fy-FRAME/2)/scale-img.height/2
     );
 
-  const esPNG =
-  foto.file?.type === "image/png" ||
-  foto.url.toLowerCase().endsWith(".png");
+    const esPNG=foto.file?.type==="image/png" || foto.url.endsWith(".png");
+    const mime=esPNG?"image/png":"image/jpeg";
+    const ext=esPNG?"png":"jpg";
 
-const mime = esPNG ? "image/png" : "image/jpeg";
-const ext  = esPNG ? "png" : "jpg";
+    out.toBlob(blob=>{
 
-out.toBlob(blob => {
+      const file=new File(
+        [blob],
+        `foto_${Date.now()}.${ext}`,
+        {type:mime}
+      );
 
-  const file = new File(
-    [blob],
-    `foto_${Date.now()}.${ext}`,
-    { type: mime }
-  );
+      if(foto.existing){
+        gallery[index]=file;
+      }else{
+        newFiles[index-gallery.length]=file;
+      }
 
-  if (foto.existing) {
-    gallery[index] = file;
-  } else {
-    newFiles[index - gallery.length] = file;
-  }
+      cropBox.style.display="none";
+      drawPreview();
 
-  cropBox.style.display = "none";
-  drawPreview();
-
-}, mime, esPNG ? undefined : 0.92);
+    },mime,esPNG?undefined:0.92);
 
   };
 
