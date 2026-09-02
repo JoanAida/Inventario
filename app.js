@@ -171,8 +171,16 @@ function drawProducts() {
       card.className = "card";
 
       card.innerHTML = `
-        <div class="cover">
-  ${p.photo ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:contain;padding:8px">` : p.emoji}
+        <div class="cover" style="background:${
+  p.photoBg === "auto"
+    ? (document.body.classList.contains("light") ? "#F5F1E8" : "#111111")
+    : (p.photoBg || "transparent")
+}">
+  ${
+    p.photo
+      ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:contain;padding:8px">`
+      : p.emoji
+  }
 </div>
         <div class="info">
           <div class="name">${p.name}</div>
@@ -199,16 +207,20 @@ function openViewer(index) {
 
 <div class="carousel">
   <div class="track" id="track">
-    ${
-      [p.photo, ...(p.gallery || [])]
-        .filter(Boolean)
-        .map(img => `
-          <div class="slide">
-            <img src="${img}">
-          </div>
-        `).join("")
-    }
-  </div>
+  ${
+    [p.photo, ...(p.gallery || [])]
+      .filter(Boolean)
+      .map((img, i) => `
+        <div class="slide" style="background:${
+          (i === 0 ? p.photoBg : p.galleryBg?.[i-1]) === "auto"
+            ? (document.body.classList.contains("light") ? "#F5F1E8" : "#111111")
+            : ((i === 0 ? p.photoBg : p.galleryBg?.[i-1]) || "transparent")
+        }">
+          <img src="${img}">
+        </div>
+      `).join("")
+  }
+</div>
 
   <button class="nav prev" id="prev">‹</button>
   <button class="nav next" id="next">›</button>
@@ -359,16 +371,20 @@ const p = index >= 0 ? products[index] : {
   </div>
 
   <div id="bgPanel" style="display:none;margin-top:10px">
-    <div class="row" style="align-items:center">
-      <button class="colorPreset" data-color="#FFFFFF" style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+  <div class="row" style="align-items:center">
 
-      <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+    <button class="btn sec" id="bgAuto">Auto</button>
 
-      <button class="colorPreset" data-color="#1F2937" style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+    <button class="colorPreset" data-color="#FFFFFF" style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
 
-      <input type="color" id="customColor" value="#ffffff" style="width:42px;height:34px;padding:0;border:none;background:none">
-    </div>
+    <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+    <button class="colorPreset" data-color="#1F2937" style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+    <input type="color" id="customColor" value="#ffffff" style="width:42px;height:34px;padding:0;border:none;background:none">
+
   </div>
+</div>
 
   <div class="row" style="margin-top:12px">
     <button class="btn sec" id="cancelCrop">Cancelar</button>
@@ -437,15 +453,22 @@ const drawPreview = () => {
   preview.innerHTML = "";
 
   const fotos = [
-  ...gallery.map(item => ({
+  ...gallery.map((item, i) => ({
     file: item instanceof File ? item : null,
     url: item instanceof File ? URL.createObjectURL(item) : item,
-    existing: true
+    existing: true,
+    bg:
+      item.bg ??
+      (i === 0
+        ? (p.photoBg || "auto")
+        : (p.galleryBg?.[i - 1] || "auto"))
   })),
+
   ...newFiles.map(file => ({
     file,
     url: URL.createObjectURL(file),
-    existing: false
+    existing: false,
+    bg: file.bg || "auto"
   }))
 ];
 
@@ -491,7 +514,8 @@ const drawPreview = () => {
   
 function openCropper(index, foto){
 
-  let backgroundColor = null; // null = transparente
+  let backgroundColor = foto.bg ?? "auto"; // auto | "#FFFFFF" | "#1F2937" | null
+ 
   const cropBox = bg.querySelector("#cropper");
   const canvas = bg.querySelector("#cropCanvas");
   canvas.style.touchAction = "none";
@@ -500,6 +524,7 @@ function openCropper(index, foto){
 const bgBtn = bg.querySelector("#bgBtn");
 const bgPanel = bg.querySelector("#bgPanel");
 const customColor = bg.querySelector("#customColor");
+const bgAuto = bg.querySelector("#bgAuto");
 const rotateBtn = bg.querySelector("#rotateBtn");
 const cancelCrop = bg.querySelector("#cancelCrop");
 const useCrop = bg.querySelector("#useCrop");
@@ -545,7 +570,18 @@ let imgY = 0;
 
     ctx.clearRect(0,0,340,420);
 
-    ctx.fillStyle = backgroundColor || "#111";
+   let canvasColor;
+
+if (backgroundColor === "auto") {
+  canvasColor = document.body.classList.contains("light")
+    ? "#F5F1E8"
+    : "#111111";
+} else {
+  canvasColor = backgroundColor;
+}
+
+    ctx.fillStyle = canvasColor;
+    
     ctx.fillRect(0,0,340,420);
 
     ctx.save();
@@ -757,6 +793,11 @@ bgBtn.onclick = () => {
     bgPanel.style.display === "none" ? "block" : "none";
 };
 
+bgAuto.onclick = () => {
+  backgroundColor = "auto";
+  draw();
+};
+
 bg.querySelectorAll(".colorPreset").forEach(btn => {
   btn.onclick = () => {
     backgroundColor = btn.dataset.color;
@@ -776,15 +817,14 @@ customColor.oninput = e => {
 };
 
   const applyCrop = () => {
-  const out = document.createElement("canvas");
-  const ratio = img.naturalWidth / (img.width * scale);
+const out = document.createElement("canvas");
 
-out.width = Math.round(crop.w * ratio);
-out.height = Math.round(crop.h * ratio);
+out.width = Math.round(crop.w);
+out.height = Math.round(crop.h);
 
-  const o = out.getContext("2d");
+const o = out.getContext("2d");
 
-  const transparent = !backgroundColor;
+const transparent = backgroundColor === "auto";
 
 if (!transparent) {
   o.fillStyle = backgroundColor;
@@ -792,7 +832,6 @@ if (!transparent) {
 }
 
 o.save();
-o.scale(ratio, ratio);
 
 o.translate(-crop.x, -crop.y);
 o.translate(imgX, imgY);
@@ -800,6 +839,7 @@ o.rotate(rotation * Math.PI / 180);
 o.scale(scale, scale);
 
 o.drawImage(img, -img.width / 2, -img.height / 2);
+
 o.restore();
 
 out.toBlob((blob) => {
@@ -808,8 +848,8 @@ out.toBlob((blob) => {
       return;
     }
 
-const type = transparent ? "image/png" : "image/jpeg";
-const ext = transparent ? "png" : "jpg";
+const type = "image/png";
+const ext = "png";
 
     const file = new File(
       [blob],
@@ -817,7 +857,9 @@ const ext = transparent ? "png" : "jpg";
       { type }
     );
 
-   if (foto.existing) {
+   file.bg = backgroundColor;
+
+if (foto.existing) {
   gallery[index] = file;
 } else {
   newFiles[index - gallery.length] = file;
@@ -827,7 +869,7 @@ cropBox.classList.remove("show");
 cropBox.style.display = "none";
 
 drawPreview();
-  }, transparent ? "image/png" : "image/jpeg", 0.92);
+}, "image/png");
 };
 
 // FORZAR QUE EL BOTÓN FUNCIONE
@@ -879,21 +921,42 @@ for (let i = 0; i < gallery.length; i++) {
 
     // Subir las fotos nuevas
     const uploaded = [];
-    for (const file of newFiles) {
-      uploaded.push(await uploadImage(file));
-    }
 
-    const allPhotos = [...gallery, ...uploaded];
+for (const file of newFiles) {
+  const url = await uploadImage(file);
+
+  uploaded.push({
+    url,
+    bg: file.bg || "auto"
+  });
+}
+
+const allPhotos = [
+  ...gallery.map((item, i) => ({
+    url: typeof item === "string" ? item : item.url,
+    bg:
+      item.bg ??
+      (i === 0
+        ? (p.photoBg || "auto")
+        : (p.galleryBg?.[i - 1] || "auto"))
+  })),
+  ...uploaded
+];
 
     const obj = {
-      name: eName.value,
-      cat: eCat.value,
-      price: Number(ePrice.value || 0),
-      desc: eDesc.value,
-      photo: allPhotos[0] || "",
-      gallery: allPhotos.slice(1),
-      fields
-    };
+  name: eName.value,
+  cat: eCat.value,
+  price: Number(ePrice.value || 0),
+  desc: eDesc.value,
+
+  photo: allPhotos[0]?.url || "",
+  photoBg: allPhotos[0]?.bg || "auto",
+
+  gallery: allPhotos.slice(1).map(f => f.url),
+  galleryBg: allPhotos.slice(1).map(f => f.bg || "auto"),
+
+  fields
+};
 
     if (editIndex >= 0) products[editIndex] = obj;
     else products.unshift(obj);
