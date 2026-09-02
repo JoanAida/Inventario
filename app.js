@@ -291,9 +291,11 @@ drawProducts();
   }
 };
 
-  bg.onclick = e => {
-    if (e.target === bg) bg.remove();
-  };
+bg.onclick = e => {
+  if (e.target === bg) {
+    bg.remove();
+  }
+};
 }
 
 function openEditor(index = -1) {
@@ -781,14 +783,7 @@ canvas.ontouchcancel = () => pinchStart = null;
 // FORZAR QUE EL BOTÓN FUNCIONE
 useCrop.type = "button";
 
-useCrop.addEventListener("click", e => {
-   alert("CLICK");
-  e.preventDefault();
-  e.stopPropagation();
-  applyCrop();
-});
-
-useCrop.onpointerup = e => {
+useCrop.onclick = e => {
   e.preventDefault();
   e.stopPropagation();
   applyCrop();
@@ -866,7 +861,13 @@ for (let i = 0; i < gallery.length; i++) {
 };
 
 bg.onclick = e => {
-  if (e.target === bg) bg.remove();
+  const cropper = bg.querySelector("#cropper");
+
+  if (cropper && cropper.classList.contains("show")) return;
+
+  if (e.target === bg) {
+    bg.remove();
+  }
 };
 
 }
