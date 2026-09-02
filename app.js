@@ -20,7 +20,10 @@ async function saveDB() {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ products })
+    body: JSON.stringify({
+      action: "saveInventory",
+      products
+    })
   });
 
   if (!res.ok) {
@@ -42,72 +45,50 @@ async function loadDB() {
 }
 
 async function uploadImage(file) {
-  const fileName = file.name;
-
   const base64 = await new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result.split(",")[1]);
     reader.readAsDataURL(file);
   });
 
-  const res = await fetch(
-    `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/images/${encodeURIComponent(fileName)}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${GITHUB.token}`,
-        Accept: "application/vnd.github+json"
-      },
-      body: JSON.stringify({
-        message: `Subir ${fileName}`,
-        content: base64,
-        branch: GITHUB.branch
-      })
-    }
-  );
+  const res = await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: "uploadImage",
+      name: file.name,
+      image: base64
+    })
+  });
 
   const data = await res.json();
 
   if (!res.ok) {
-    console.error(data);
-    throw new Error(data.message);
+    throw new Error(data.error || "Error al subir la imagen");
   }
 
-  return `https://cdn.jsdelivr.net/gh/${GITHUB.owner}/${GITHUB.repo}@${GITHUB.branch}/images/${encodeURIComponent(fileName)}`;
+  return data.url;
 }
 
 async function deleteImage(url) {
-  const path = url.split("/images/")[1];
 
-  // Obtener el SHA del archivo
-  const info = await fetch(
-    `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/images/${path}?ref=${GITHUB.branch}`,
-    {
-      headers: {
-        Authorization: `Bearer ${GITHUB.token}`,
-        Accept: "application/vnd.github+json"
-      }
-    }
-  ).then(r => r.json());
-
-  // Eliminar el archivo
-  await fetch(
-    `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/images/${path}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${GITHUB.token}`,
-        Accept: "application/vnd.github+json"
-      },
-      body: JSON.stringify({
-        message: `Eliminar ${path}`,
-        sha: info.sha,
-        branch: GITHUB.branch
-      })
-    }
+  const nombre = decodeURIComponent(
+    url.split("/images/")[1]
   );
-}
 
+  await fetch(API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      action: "deleteImage",
+      name: nombre
+    })
+  });
+}
 function render() {
   app.innerHTML = `
     <header>
