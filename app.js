@@ -34,12 +34,16 @@ async function saveDB() {
 async function loadDB() {
   try {
     const res = await fetch(
-      `https://raw.githubusercontent.com/${GITHUB.owner}/${GITHUB.repo}/${GITHUB.branch}/inventario.json?v=${Date.now()}`
+      `https://raw.githubusercontent.com/${GITHUB.owner}/${GITHUB.repo}/${GITHUB.branch}/inventario.json?t=${Date.now()}`,
+      {
+        cache: "no-store"
+      }
     );
 
     products = res.ok ? await res.json() : [];
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     products = [];
   }
 }
