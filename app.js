@@ -483,31 +483,34 @@ function openCropper(index, foto){
 
   const img = new Image();
 
-  const FRAME = 280;
-
   let scale = 1;
   let rotation = 0;
-  let x = 0;
-  let y = 0;
+  let imgX = 0;
+  let imgY = 0;
 
-  let pointers = new Map();
-  let startDist = 0;
-  let startScale = 1;
-  let lastX = 0;
-  let lastY = 0;
+  canvas.width = 340;
+  canvas.height = 420;
 
-  img.onload = () => {
+  const crop = {
+    x:30,
+    y:50,
+    w:280,
+    h:280
+  };
 
-    cropBox.style.display = "flex";
+  const HANDLE = 18;
 
-    const size = Math.min(window.innerWidth, 420);
+  img.onload = ()=>{
 
-    canvas.width = size;
-    canvas.height = size + 70;
+    cropBox.style.display="block";
 
-    scale = FRAME / Math.max(img.width, img.height);
-    x = canvas.width / 2;
-    y = FRAME / 2 + 20;
+    scale = Math.min(
+      crop.w/img.width,
+      crop.h/img.height
+    );
+
+    imgX = canvas.width/2;
+    imgY = canvas.height/2;
 
     draw();
 
@@ -517,14 +520,14 @@ function openCropper(index, foto){
 
   function draw(){
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,340,420);
 
-    ctx.fillStyle = "#111";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#111";
+    ctx.fillRect(0,0,340,420);
 
     ctx.save();
 
-    ctx.translate(x,y);
+    ctx.translate(imgX,imgY);
     ctx.rotate(rotation*Math.PI/180);
     ctx.scale(scale,scale);
 
@@ -532,92 +535,179 @@ function openCropper(index, foto){
 
     ctx.restore();
 
-    const fx=(canvas.width-FRAME)/2;
-    const fy=20;
-
     ctx.fillStyle="rgba(0,0,0,.55)";
-    ctx.fillRect(0,0,canvas.width,fy);
-    ctx.fillRect(0,fy,fx,FRAME);
-    ctx.fillRect(fx+FRAME,fy,canvas.width,FRAME);
-    ctx.fillRect(0,fy+FRAME,canvas.width,canvas.height);
+
+    ctx.fillRect(0,0,340,crop.y);
+    ctx.fillRect(0,crop.y,crop.x,crop.h);
+    ctx.fillRect(crop.x+crop.w,crop.y,340,crop.h);
+    ctx.fillRect(0,crop.y+crop.h,340,420);
 
     ctx.strokeStyle="#fff";
     ctx.lineWidth=2;
-    ctx.strokeRect(fx,fy,FRAME,FRAME);
+    ctx.strokeRect(crop.x,crop.y,crop.w,crop.h);
+
+  // Esquinas
+drawHandle(crop.x, crop.y);
+drawHandle(crop.x + crop.w, crop.y);
+drawHandle(crop.x, crop.y + crop.h);
+drawHandle(crop.x + crop.w, crop.y + crop.h);
+
+// Laterales (estilo iPhone)
+drawHandle(crop.x + crop.w/2, crop.y);
+drawHandle(crop.x + crop.w/2, crop.y + crop.h);
+drawHandle(crop.x, crop.y + crop.h/2);
+drawHandle(crop.x + crop.w, crop.y + crop.h/2);
+
   }
 
-  function distance(a,b){
-    return Math.hypot(a.x-b.x,a.y-b.y);
+  function drawHandle(x,y){
+    ctx.fillStyle="#fff";
+    ctx.beginPath();
+    ctx.arc(x,y,6,0,Math.PI*2);
+    ctx.fill();
   }
+
+  let mode=null;
+  let start={};
 
   canvas.onpointerdown=e=>{
+
+    const r=canvas.getBoundingClientRect();
+    const x=(e.clientX-r.left)*(340/r.width);
+    const y=(e.clientY-r.top)*(420/r.height);
+
+    start={x,y,crop:{...crop}};
+
+const mx = crop.x + crop.w/2;
+const my = crop.y + crop.h/2;
+
+if (dist(x,y,crop.x,crop.y) < HANDLE) mode="tl";
+else if (dist(x,y,crop.x+crop.w,crop.y) < HANDLE) mode="tr";
+else if (dist(x,y,crop.x,crop.y+crop.h) < HANDLE) mode="bl";
+else if (dist(x,y,crop.x+crop.w,crop.y+crop.h) < HANDLE) mode="br";
+
+else if (dist(x,y,mx,crop.y) < HANDLE) mode="top";
+else if (dist(x,y,mx,crop.y+crop.h) < HANDLE) mode="bottom";
+else if (dist(x,y,crop.x,my) < HANDLE) mode="left";
+else if (dist(x,y,crop.x+crop.w,my) < HANDLE) mode="right";
+
+else if (x>crop.x && x<crop.x+crop.w && y>crop.y && y<crop.y+crop.h)
+  mode="move";
+  
+    else mode=null;
+
     canvas.setPointerCapture(e.pointerId);
 
-    pointers.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
-
-    if(pointers.size===1){
-      lastX=e.offsetX;
-      lastY=e.offsetY;
-    }
-
-    if(pointers.size===2){
-      const pts=[...pointers.values()];
-      startDist=distance(pts[0],pts[1]);
-      startScale=scale;
-    }
   };
 
   canvas.onpointermove=e=>{
 
-    if(!pointers.has(e.pointerId)) return;
+    if(!mode) return;
 
-    pointers.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
+    const r=canvas.getBoundingClientRect();
+    const x=(e.clientX-r.left)*(340/r.width);
+    const y=(e.clientY-r.top)*(420/r.height);
 
-    if(pointers.size===1){
+    const dx=x-start.x;
+    const dy=y-start.y;
 
-      x+=e.offsetX-lastX;
-      y+=e.offsetY-lastY;
-
-      lastX=e.offsetX;
-      lastY=e.offsetY;
-
-      draw();
+    if(mode==="move"){
+      imgX+=dx;
+      imgY+=dy;
+      start.x=x;
+      start.y=y;
     }
 
-    if(pointers.size===2){
-
-      const pts=[...pointers.values()];
-      const d=distance(pts[0],pts[1]);
-
-      scale=startScale*(d/startDist);
-      scale=Math.max(0.2,Math.min(scale,5));
-
-      draw();
+    if(mode==="tl"){
+      crop.x=Math.min(start.crop.x+dx,start.crop.x+start.crop.w-60);
+      crop.y=Math.min(start.crop.y+dy,start.crop.y+start.crop.h-60);
+      crop.w=start.crop.w-(crop.x-start.crop.x);
+      crop.h=start.crop.h-(crop.y-start.crop.y);
     }
-  };
 
-  function endPointer(e){
-    pointers.delete(e.pointerId);
-
-    if(pointers.size===1){
-      const p=[...pointers.values()][0];
-      lastX=p.x;
-      lastY=p.y;
+    if(mode==="tr"){
+      crop.y=Math.min(start.crop.y+dy,start.crop.y+start.crop.h-60);
+      crop.w=Math.max(60,start.crop.w+dx);
+      crop.h=start.crop.h-(crop.y-start.crop.y);
     }
-  }
 
-  canvas.onpointerup=endPointer;
-  canvas.onpointercancel=endPointer;
+    if(mode==="bl"){
+      crop.x=Math.min(start.crop.x+dx,start.crop.x+start.crop.w-60);
+      crop.w=start.crop.w-(crop.x-start.crop.x);
+      crop.h=Math.max(60,start.crop.h+dy);
+    }
 
-  canvas.onwheel=e=>{
-    e.preventDefault();
+    if(mode==="br"){
+      crop.w=Math.max(60,start.crop.w+dx);
+      crop.h=Math.max(60,start.crop.h+dy);
+    }
 
-    scale*=e.deltaY>0?0.95:1.05;
-    scale=Math.max(0.2,Math.min(scale,5));
+if(mode==="top"){
+  crop.y = Math.min(start.crop.y+dy, start.crop.y+start.crop.h-60);
+  crop.h = start.crop.h-(crop.y-start.crop.y);
+}
 
+if(mode==="bottom"){
+  crop.h = Math.max(60, start.crop.h+dy);
+}
+
+if(mode==="left"){
+  crop.x = Math.min(start.crop.x+dx, start.crop.x+start.crop.w-60);
+  crop.w = start.crop.w-(crop.x-start.crop.x);
+}
+
+if(mode==="right"){
+  crop.w = Math.max(60, start.crop.w+dx);
+}
+    
     draw();
   };
 
+  canvas.onpointerup = e => {
+  mode = null;
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+};
+
+  canvas.onpointercancel = () => mode = null;
+
+  canvas.onwheel=e=>{
+    e.preventDefault();
+    scale*=e.deltaY>0?0.95:1.05;
+    draw();
+  };
+
+  let pinchStart = null;
+
+canvas.addEventListener("touchstart", e => {
+  if (e.touches.length === 2) {
+    const a = e.touches[0];
+    const b = e.touches[1];
+    pinchStart = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+  }
+}, { passive:false });
+
+canvas.addEventListener("touchmove", e => {
+  if (e.touches.length !== 2 || !pinchStart) return;
+
+  e.preventDefault();
+
+  const a = e.touches[0];
+  const b = e.touches[1];
+
+  const d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+
+  scale *= d/pinchStart;
+  pinchStart = d;
+
+  draw();
+
+}, { passive:false });
+
+canvas.addEventListener("touchend", () => pinchStart = null);
+canvas.addEventListener("touchcancel", () => pinchStart = null);
+  
   rotateBtn.onclick=()=>{
     rotation=(rotation+90)%360;
     draw();
@@ -630,48 +720,50 @@ function openCropper(index, foto){
   useCrop.onclick=()=>{
 
     const out=document.createElement("canvas");
-    out.width=FRAME;
-    out.height=FRAME;
+    out.width=crop.w;
+    out.height=crop.h;
 
     const o=out.getContext("2d");
 
-    o.translate(FRAME/2,FRAME/2);
+    const isPNG =
+      foto.file?.type==="image/png" ||
+      foto.url.toLowerCase().endsWith(".png");
+
+    if(!isPNG){
+      o.fillStyle="#fff";
+      o.fillRect(0,0,out.width,out.height);
+    }
+
+    o.translate(out.width/2,out.height/2);
     o.rotate(rotation*Math.PI/180);
     o.scale(scale,scale);
 
-    const fx=(canvas.width-FRAME)/2;
-    const fy=20;
-
     o.drawImage(
       img,
-      -(x-fx-FRAME/2)/scale-img.width/2,
-      -(y-fy-FRAME/2)/scale-img.height/2
+      -(imgX-crop.x-crop.w/2)/scale-img.width/2,
+      -(imgY-crop.y-crop.h/2)/scale-img.height/2
     );
-
-    const esPNG=foto.file?.type==="image/png" || foto.url.endsWith(".png");
-    const mime=esPNG?"image/png":"image/jpeg";
-    const ext=esPNG?"png":"jpg";
 
     out.toBlob(blob=>{
 
-      const file=new File(
-        [blob],
-        `foto_${Date.now()}.${ext}`,
-        {type:mime}
-      );
+      const ext=isPNG?"png":"jpg";
+      const type=isPNG?"image/png":"image/jpeg";
 
-      if(foto.existing){
-        gallery[index]=file;
-      }else{
-        newFiles[index-gallery.length]=file;
-      }
+      const file=new File([blob],`foto_${Date.now()}.${ext}`,{type});
+
+      if(foto.existing) gallery[index]=file;
+      else newFiles[index-gallery.length]=file;
 
       cropBox.style.display="none";
       drawPreview();
 
-    },mime,esPNG?undefined:0.92);
+    },isPNG?"image/png":"image/jpeg",isPNG?undefined:0.92);
 
   };
+
+  function dist(ax,ay,bx,by){
+    return Math.hypot(ax-bx,ay-by);
+  }
 
 }
   
