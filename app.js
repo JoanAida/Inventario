@@ -717,49 +717,53 @@ canvas.addEventListener("touchcancel", () => pinchStart = null);
     cropBox.style.display="none";
   };
 
-  useCrop.onclick=()=>{
+  useCrop.onclick = () => {
 
-    const out=document.createElement("canvas");
-    out.width=crop.w;
-    out.height=crop.h;
+  const out = document.createElement("canvas");
+  out.width = crop.w;
+  out.height = crop.h;
 
-    const o=out.getContext("2d");
+  const o = out.getContext("2d");
 
-    const isPNG =
-      foto.file?.type==="image/png" ||
-      foto.url.toLowerCase().endsWith(".png");
+  const isPNG =
+    foto.file?.type === "image/png" ||
+    foto.url.toLowerCase().endsWith(".png");
 
-    if(!isPNG){
-      o.fillStyle="#fff";
-      o.fillRect(0,0,out.width,out.height);
-    }
+  if (!isPNG) {
+    o.fillStyle = "#fff";
+    o.fillRect(0, 0, out.width, out.height);
+  }
 
-    o.translate(out.width/2,out.height/2);
-    o.rotate(rotation*Math.PI/180);
-    o.scale(scale,scale);
+  // El recuadro pasa a ser el origen del nuevo canvas
+  o.translate(-crop.x, -crop.y);
 
-    o.drawImage(
-      img,
-      -(imgX-crop.x-crop.w/2)/scale-img.width/2,
-      -(imgY-crop.y-crop.h/2)/scale-img.height/2
+  // Aplicamos EXACTAMENTE la misma transformación
+  o.translate(imgX, imgY);
+  o.rotate(rotation * Math.PI / 180);
+  o.scale(scale, scale);
+
+  o.drawImage(img, -img.width/2, -img.height/2);
+
+  out.toBlob(blob => {
+
+    const type = isPNG ? "image/png" : "image/jpeg";
+    const ext  = isPNG ? "png" : "jpg";
+
+    const file = new File(
+      [blob],
+      `foto_${Date.now()}.${ext}`,
+      { type }
     );
 
-    out.toBlob(blob=>{
+    if (foto.existing) gallery[index] = file;
+    else newFiles[index - gallery.length] = file;
 
-      const ext=isPNG?"png":"jpg";
-      const type=isPNG?"image/png":"image/jpeg";
+    cropBox.style.display = "none";
+    drawPreview();
 
-      const file=new File([blob],`foto_${Date.now()}.${ext}`,{type});
+  }, type, isPNG ? undefined : 0.92);
 
-      if(foto.existing) gallery[index]=file;
-      else newFiles[index-gallery.length]=file;
-
-      cropBox.style.display="none";
-      drawPreview();
-
-    },isPNG?"image/png":"image/jpeg",isPNG?undefined:0.92);
-
-  };
+};
 
   function dist(ax,ay,bx,by){
     return Math.hypot(ax-bx,ay-by);
