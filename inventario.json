@@ -1,5 +1,13 @@
 [
   {
+    "name": "Jdbdkx",
+    "cat": "Camping",
+    "price": 25,
+    "desc": "Bckdksns",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/IMG_7823.png",
+    "gallery": []
+  },
+  {
     "name": "tienda",
     "cat": "Camping",
     "price": 350,
