@@ -1,23 +1,5 @@
 [
   {
-    "name": "srtnse",
-    "cat": "Pesca",
-    "price": 50,
-    "desc": "tymdrfthm",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343033448.jpg",
-    "gallery": [],
-    "fields": [
-      {
-        "name": "rfnj",
-        "value": "rfynm"
-      },
-      {
-        "name": "rfm",
-        "value": "rsfmn"
-      }
-    ]
-  },
-  {
     "name": "Caña pesca",
     "cat": "Pesca",
     "price": 25,
