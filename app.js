@@ -782,6 +782,7 @@ canvas.ontouchcancel = () => pinchStart = null;
 useCrop.type = "button";
 
 useCrop.addEventListener("click", e => {
+   alert("CLICK");
   e.preventDefault();
   e.stopPropagation();
   applyCrop();
