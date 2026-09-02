@@ -344,3 +344,28 @@ textarea{
 }
 .prev{left:10px}
 .next{right:10px}
+
+.customFields{
+  margin-top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.fieldRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  background:var(--card);
+  border-radius:12px;
+}
+
+.fieldName{
+  font-weight:600;
+  opacity:.8;
+}
+
+.fieldValue{
+  text-align:right;
+}
