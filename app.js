@@ -235,23 +235,9 @@ ${
     : ""
 }
 
-   <div class="row" style="margin-top:12px">
-  <button class="btn sec" id="rotateBtn">↻ Girar</button>
-  <button class="btn sec" id="bgBtn">🖼 Fondo</button>
-</div>
-
-<div id="bgPanel" style="display:none;margin-top:10px">
-  <div class="row">
-    <button class="colorPreset" data-color="#FFFFFF" style="background:#fff"></button>
-    <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8"></button>
-    <button class="colorPreset" data-color="#1F2937" style="background:#1F2937"></button>
-    <input type="color" id="customColor" value="#ffffff">
-  </div>
-</div>
-
-<div class="row" style="margin-top:12px">
-  <button class="btn sec" id="cancelCrop">Cancelar</button>
-  <button class="btn pri" id="useCrop">Usar</button>
+<div class="row" style="margin-top:20px">
+  <button class="btn pri" id="edit">Editar</button>
+  <button class="btn sec" id="del">Borrar</button>
 </div>
     </div>
   `;
@@ -366,12 +352,27 @@ const p = index >= 0 ? products[index] : {
 <div id="galleryPreview" class="gallery"></div>
 <div id="cropper" class="cropper" style="display:none">
   <canvas id="cropCanvas"></canvas>
+ <div class="row" style="margin-top:12px">
+  <button class="btn sec" id="rotateBtn">↻ Girar</button>
+  <button class="btn sec" id="bgBtn">🖼 Fondo</button>
+</div>
 
-  <div class="row" style="margin-top:12px">
-    <button class="btn sec" id="rotateBtn">↻ Girar</button>
-    <button class="btn sec" id="cancelCrop">Cancelar</button>
-    <button class="btn pri" id="useCrop">Usar</button>
+ <div id="bgPanel" style="display:none;margin-top:10px">
+  <div class="row" style="align-items:center">
+    <button class="colorPreset" data-color="#FFFFFF" style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+    <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+    <button class="colorPreset" data-color="#1F2937" style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+    <input type="color" id="customColor" value="#ffffff" style="width:42px;height:34px;padding:0;border:none;background:none">
   </div>
+</div>
+
+<div class="row" style="margin-top:12px">
+  <button class="btn sec" id="cancelCrop">Cancelar</button>
+  <button class="btn pri" id="useCrop">Usar</button>
+</div>
 </div>
 
       <div class="row" style="margin-top:18px">
@@ -498,8 +499,10 @@ function openCropper(index, foto){
 const bgBtn = bg.querySelector("#bgBtn");
 const bgPanel = bg.querySelector("#bgPanel");
 const customColor = bg.querySelector("#customColor");
-
-  const img = new Image();
+const rotateBtn = bg.querySelector("#rotateBtn");
+const cancelCrop = bg.querySelector("#cancelCrop");
+const useCrop = bg.querySelector("#useCrop");
+const img = new Image();
 
 let scale = 1;
 let rotation = 0;
@@ -823,7 +826,7 @@ const ext = transparent ? "png" : "jpg";
     cropBox.style.display = "none";
 
     drawPreview();
-  }, isPNG ? "image/png" : "image/jpeg", 0.92);
+  }, transparent ? "image/png" : "image/jpeg", 0.92);
 };
 
 // FORZAR QUE EL BOTÓN FUNCIONE
