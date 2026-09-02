@@ -235,10 +235,24 @@ ${
     : ""
 }
 
-      <div class="row" style="margin-top:20px">
-        <button class="btn pri" id="edit">Editar</button>
-        <button class="btn sec" id="del">Borrar</button>
-      </div>
+   <div class="row" style="margin-top:12px">
+  <button class="btn sec" id="rotateBtn">↻ Girar</button>
+  <button class="btn sec" id="bgBtn">🖼 Fondo</button>
+</div>
+
+<div id="bgPanel" style="display:none;margin-top:10px">
+  <div class="row">
+    <button class="colorPreset" data-color="#FFFFFF" style="background:#fff"></button>
+    <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8"></button>
+    <button class="colorPreset" data-color="#1F2937" style="background:#1F2937"></button>
+    <input type="color" id="customColor" value="#ffffff">
+  </div>
+</div>
+
+<div class="row" style="margin-top:12px">
+  <button class="btn sec" id="cancelCrop">Cancelar</button>
+  <button class="btn pri" id="useCrop">Usar</button>
+</div>
     </div>
   `;
 
@@ -475,21 +489,24 @@ const drawPreview = () => {
   
 function openCropper(index, foto){
 
+  let backgroundColor = null; // null = transparente
   const cropBox = bg.querySelector("#cropper");
   const canvas = bg.querySelector("#cropCanvas");
   canvas.style.touchAction = "none";
   const ctx = canvas.getContext("2d");
 
-  const rotateBtn = bg.querySelector("#rotateBtn");
-  const cancelCrop = bg.querySelector("#cancelCrop");
-  const useCrop = bg.querySelector("#useCrop");
+const bgBtn = bg.querySelector("#bgBtn");
+const bgPanel = bg.querySelector("#bgPanel");
+const customColor = bg.querySelector("#customColor");
 
   const img = new Image();
 
-  let scale = 1;
-  let rotation = 0;
-  let imgX = 0;
-  let imgY = 0;
+let scale = 1;
+let rotation = 0;
+let imgX = 0;
+let imgY = 0;
+
+let backgroundColor = null; // ← AÑADE ESTA LÍNEA
 
   canvas.width = 340;
   canvas.height = 420;
@@ -526,7 +543,7 @@ function openCropper(index, foto){
 
     ctx.clearRect(0,0,340,420);
 
-    ctx.fillStyle="#111";
+    ctx.fillStyle = backgroundColor || "#111";
     ctx.fillRect(0,0,340,420);
 
     ctx.save();
@@ -733,6 +750,24 @@ canvas.ontouchcancel = () => pinchStart = null;
     draw();
   };
 
+bgBtn.onclick = () => {
+  bgPanel.style.display =
+    bgPanel.style.display === "none" ? "block" : "none";
+};
+
+bg.querySelectorAll(".colorPreset").forEach(btn => {
+  btn.onclick = () => {
+    backgroundColor = btn.dataset.color;
+    customColor.value = backgroundColor;
+    draw();
+  };
+});
+
+customColor.oninput = e => {
+  backgroundColor = e.target.value;
+  draw();
+};
+  
   cancelCrop.onclick = () => {
   cropBox.classList.remove("show");
   cropBox.style.display = "none";
@@ -751,8 +786,8 @@ out.height = Math.round(crop.h * ratio);
     foto.file?.type === "image/png" ||
     foto.url.toLowerCase().endsWith(".png");
 
-  if (!isPNG) {
-  o.fillStyle = "#fff";
+  if (backgroundColor) {
+  o.fillStyle = backgroundColor;
   o.fillRect(0, 0, out.width, out.height);
 }
 
@@ -772,8 +807,10 @@ o.drawImage(img, -img.width / 2, -img.height / 2);
       return;
     }
 
-    const type = isPNG ? "image/png" : "image/jpeg";
-    const ext = isPNG ? "png" : "jpg";
+  const transparent = !backgroundColor;
+
+const type = transparent ? "image/png" : "image/jpeg";
+const ext = transparent ? "png" : "jpg";
 
     const file = new File(
       [blob],
