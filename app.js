@@ -290,6 +290,7 @@ if (total > 1) {
 await saveDB();
 bg.remove();
 drawProducts();
+alert("Guardado");
 
   } catch (err) {
     console.error(err);
@@ -421,179 +422,201 @@ const p = index >= 0 ? products[index] : {
 }
   
 const drawPreview = () => {
+
   preview.innerHTML = "";
 
-  gallery.forEach(url => {
-    preview.innerHTML += `<img src="${url}">`;
-  });
+  const fotos = [
+  ...gallery.map(item => ({
+    file: item instanceof File ? item : null,
+    url: item instanceof File ? URL.createObjectURL(item) : item,
+    existing: true
+  })),
+  ...newFiles.map(file => ({
+    file,
+    url: URL.createObjectURL(file),
+    existing: false
+  }))
+];
 
-  newFiles.forEach(file => {
-    preview.innerHTML += `<img src="${URL.createObjectURL(file)}">`;
-  });
-};
+  fotos.forEach((foto, i) => {
 
-drawPreview();
-drawFields();
+    const card = document.createElement("div");
+    card.className = "photoCard";
 
-addFieldBtn.onclick = () => {
-  fields.push({ name:"", value:"" });
-  drawFields();
-};
-const cropBox = bg.querySelector("#cropper");
-const canvas = bg.querySelector("#cropCanvas");
-const ctx = canvas.getContext("2d");
+    card.innerHTML = `
+      <img src="${foto.url}">
+      <button class="editPhoto">✏️</button>
+      <button class="deletePhoto">🗑️</button>
+    `;
 
-let img = new Image();
-let rotation = 0;
-let crop = { x:0, y:0, w:0, h:0 };
+    // BORRAR
+    card.querySelector(".deletePhoto").onclick = () => {
 
-function drawCrop(){
+    if (foto.existing) {
+  const item = gallery[i];
 
-  const w = img.width;
-  const h = img.height;
-
-  canvas.width = rotation % 180 ? h : w;
-  canvas.height = rotation % 180 ? w : h;
-
-  ctx.save();
-
-  if(rotation===90){
-    ctx.translate(canvas.width,0);
-    ctx.rotate(Math.PI/2);
-  }
-  if(rotation===180){
-    ctx.translate(canvas.width,canvas.height);
-    ctx.rotate(Math.PI);
-  }
-  if(rotation===270){
-    ctx.translate(0,canvas.height);
-    ctx.rotate(-Math.PI/2);
+  if (item instanceof File) {
+    newFiles = newFiles.filter(f => f !== item);
   }
 
-  ctx.drawImage(img,0,0);
-  ctx.restore();
-
-  if(!crop.w){
-    crop = {
-      x: canvas.width*0.1,
-      y: canvas.height*0.1,
-      w: canvas.width*0.8,
-      h: canvas.height*0.8
-    };
-  }
-
-  ctx.strokeStyle="#00ff88";
-  ctx.lineWidth=3;
-  ctx.strokeRect(crop.x,crop.y,crop.w,crop.h);
+  gallery.splice(i, 1);
+} else {
+  newFiles.splice(i - gallery.length, 1);
 }
 
-ePhotos.onchange = () => {
-
-  const file = ePhotos.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = e=>{
-    img.onload = ()=>{
-      rotation=0;
-      crop={x:0,y:0,w:0,h:0};
-      cropBox.style.display="block";
-      drawCrop();
+      drawPreview();
     };
-    img.src=e.target.result;
+
+    // EDITAR
+    card.querySelector(".editPhoto").onclick = () => {
+      openCropper(i, foto);
+    };
+
+    preview.appendChild(card);
+
+  });
+
+};
+  
+function openCropper(index, foto){
+
+  const cropBox = bg.querySelector("#cropper");
+  const canvas = bg.querySelector("#cropCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const rotateBtn = bg.querySelector("#rotateBtn");
+  const cancelCrop = bg.querySelector("#cancelCrop");
+  const useCrop = bg.querySelector("#useCrop");
+
+  const img = new Image();
+
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    cropBox.style.display = "block";
   };
 
-  reader.readAsDataURL(file);
+  img.src = foto.url;
 
+  rotateBtn.onclick = () => {
+    const tmp = document.createElement("canvas");
+    tmp.width = canvas.height;
+    tmp.height = canvas.width;
+
+    const t = tmp.getContext("2d");
+    t.translate(tmp.width, 0);
+    t.rotate(Math.PI / 2);
+    t.drawImage(canvas, 0, 0);
+
+    canvas.width = tmp.width;
+    canvas.height = tmp.height;
+    ctx.drawImage(tmp, 0, 0);
+  };
+
+  cancelCrop.onclick = () => {
+    cropBox.style.display = "none";
+  };
+
+  useCrop.onclick = () => {
+
+    canvas.toBlob(blob => {
+
+      const file = new File(
+        [blob],
+        `foto_${Date.now()}.jpg`,
+        { type: "image/jpeg" }
+      );
+
+      if (foto.existing) {
+        gallery[index] = file;
+      } else {
+        newFiles[index - gallery.length] = file;
+      }
+
+      cropBox.style.display = "none";
+      drawPreview();
+
+    }, "image/jpeg", 0.92);
+
+  };
+
+}
+  
+drawFields();
+drawPreview();
+
+
+addFieldBtn.onclick = () => {
+  fields.push({ name: "", value: "" });
+  drawFields();
 };
 
-rotateBtn.onclick=()=>{
-  rotation=(rotation+90)%360;
-  crop={x:0,y:0,w:0,h:0};
-  drawCrop();
+ePhotos.onchange = () => {
+  const files = [...ePhotos.files];
+  newFiles.push(...files);
+  drawPreview();
+  ePhotos.value = "";
 };
 
-cancelCrop.onclick=()=>{
-  cropBox.style.display="none";
-  ePhotos.value="";
-};
-
-useCrop.onclick=()=>{
-
-  const out=document.createElement("canvas");
-  out.width=crop.w;
-  out.height=crop.h;
-
-  out.getContext("2d").drawImage(
-    canvas,
-    crop.x,crop.y,crop.w,crop.h,
-    0,0,crop.w,crop.h
-  );
-
-  out.toBlob(blob=>{
-
-    const finalFile=new File(
-      [blob],
-      ePhotos.files[0].name,
-      {type:"image/jpeg"}
-    );
-
-    newFiles=[finalFile];
-
-    drawPreview();
-
-    cropBox.style.display="none";
-
-  },"image/jpeg",0.9);
-
-};
-
-  btnCancel.onclick = ()=>bg.remove();
+btnCancel.onclick = () => bg.remove();
 
 btnSave.onclick = async () => {
   try {
     btnSave.disabled = true;
     btnSave.textContent = "Subiendo...";
 
-    const uploaded = [];
+  // Subir las fotos editadas y borrar las antiguas de GitHub
+for (let i = 0; i < gallery.length; i++) {
+  if (gallery[i] instanceof File) {
+    const antigua = [p.photo, ...(p.gallery || [])][i];
 
+    if (antigua) {
+      await deleteImage(antigua);
+    }
+
+    gallery[i] = await uploadImage(gallery[i]);
+  }
+}
+
+    // Subir las fotos nuevas
+    const uploaded = [];
     for (const file of newFiles) {
       uploaded.push(await uploadImage(file));
     }
 
     const allPhotos = [...gallery, ...uploaded];
 
-  const obj = {
-  name: eName.value,
-  cat: eCat.value,
-  price: Number(ePrice.value || 0),
-  desc: eDesc.value,
-  photo: allPhotos[0] || "",
-  gallery: allPhotos.slice(1),
-  fields
-};
+    const obj = {
+      name: eName.value,
+      cat: eCat.value,
+      price: Number(ePrice.value || 0),
+      desc: eDesc.value,
+      photo: allPhotos[0] || "",
+      gallery: allPhotos.slice(1),
+      fields
+    };
 
     if (editIndex >= 0) products[editIndex] = obj;
-else products.unshift(obj);
+    else products.unshift(obj);
 
-await saveDB();
-bg.remove();
-drawProducts();
-alert("Guardado");
+    await saveDB();
+    bg.remove();
+    drawProducts();
+    alert("Guardado");
 
-  } 
-  catch (err) {
+  } catch (err) {
     console.error(err);
     alert(err.message);
   }
 };
 
-  bg.onclick=e=>{
-    if(e.target===bg) bg.remove();
-  };
-}
+bg.onclick = e => {
+  if (e.target === bg) bg.remove();
+};
 
+}
+  
 (async () => {
   await loadDB();
   render();
