@@ -894,10 +894,13 @@ bgBtn.onclick = () => {
 };
 bgTransparent.onclick = () => {
   backgroundColor = "transparent";
+  bgPanel.style.display = "none";
   draw();
 };
+
 bgAuto.onclick = () => {
   backgroundColor = "auto";
+  bgPanel.style.display = "none";
   draw();
 };
 
@@ -905,6 +908,7 @@ bg.querySelectorAll(".colorPreset").forEach(btn => {
   btn.onclick = () => {
     backgroundColor = btn.dataset.color;
     customColor.value = backgroundColor;
+    bgPanel.style.display = "none";
     draw();
   };
 });
