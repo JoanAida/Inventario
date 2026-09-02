@@ -761,30 +761,35 @@ canvas.ontouchcancel = () => pinchStart = null;
 
   o.drawImage(img, -img.width / 2, -img.height / 2);
 
-  const dataURL = out.toDataURL(isPNG ? "image/png" : "image/jpeg", 0.92);
+  out.toBlob((blob) => {
+    if (!blob) {
+      alert("Error al recortar");
+      return;
+    }
 
-  fetch(dataURL)
-    .then(r => r.blob())
-    .then(blob => {
-      const type = isPNG ? "image/png" : "image/jpeg";
-      const ext = isPNG ? "png" : "jpg";
+    const type = isPNG ? "image/png" : "image/jpeg";
+    const ext = isPNG ? "png" : "jpg";
 
-      const file = new File([blob], `foto_${Date.now()}.${ext}`, { type });
+    const file = new File(
+      [blob],
+      `foto_${Date.now()}.${ext}`,
+      { type }
+    );
 
-      if (foto.existing) gallery[index] = file;
-      else newFiles[index - gallery.length] = file;
+    if (foto.existing) gallery[index] = file;
+    else newFiles[index - gallery.length] = file;
 
-      cropBox.classList.remove("show");
-      cropBox.style.display = "none";
+    cropBox.classList.remove("show");
+    cropBox.style.display = "none";
 
-      drawPreview();
-    });
+    drawPreview();
+  }, isPNG ? "image/png" : "image/jpeg", 0.92);
 };
 
 // FORZAR QUE EL BOTÓN FUNCIONE
 useCrop.type = "button";
 
-useCrop.onclick = e => {
+useCrop.onclick = (e) => {
   e.preventDefault();
   e.stopPropagation();
   applyCrop();
