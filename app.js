@@ -32,20 +32,14 @@ async function saveDB() {
 }
 
 async function loadDB() {
-  try {
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${GITHUB.owner}/${GITHUB.repo}/${GITHUB.branch}/inventario.json?t=${Date.now()}`,
-      {
-        cache: "no-store"
-      }
-    );
+  const res = await fetch(API);
 
-    products = res.ok ? await res.json() : [];
-
-  } catch (err) {
-    console.error(err);
+  if (!res.ok) {
     products = [];
+    return;
   }
+
+  products = await res.json();
 }
 
 async function uploadImage(file) {
