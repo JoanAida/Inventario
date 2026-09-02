@@ -31,11 +31,15 @@
   {
     "name": "sb<wsa",
     "cat": "Pesca",
-    "price": 7896,
+    "price": 35,
     "desc": "fyughnfvb ",
     "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343429811.png",
+    "photoBg": "auto",
     "gallery": [
       "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343437745.png"
+    ],
+    "galleryBg": [
+      "auto"
     ],
     "fields": []
   },
