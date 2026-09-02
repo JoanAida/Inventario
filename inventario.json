@@ -1,97 +1,115 @@
-[
-  {
-    "name": "",
-    "cat": "Camping",
-    "price": 0,
-    "desc": "",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788360129957.png",
-    "photoBg": "#FFFFFF",
-    "gallery": [],
-    "galleryBg": [],
-    "fields": []
-  },
-  {
-    "name": "",
-    "cat": "Camping",
-    "price": 0,
-    "desc": "",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788358792979.jpg",
-    "gallery": [],
-    "fields": []
-  },
-  {
-    "name": "",
-    "cat": "Camping",
-    "price": 0,
-    "desc": "",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/ChatGPT%20Image%2026%20ago%202026%2C%2015_19_13.png",
-    "gallery": [],
-    "fields": []
-  },
-  {
-    "name": "sb<wsa",
-    "cat": "Pesca",
-    "price": 35,
-    "desc": "fyughnfvb ",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343429811.png",
-    "photoBg": "auto",
-    "gallery": [
-      "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343437745.png"
-    ],
-    "galleryBg": [
-      "auto"
-    ],
-    "fields": []
-  },
-  {
-    "name": "Caña pesca",
-    "cat": "Pesca",
-    "price": 25,
-    "desc": "Ukiyo 100 230",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/ChatGPT%20Image%2026%20ago%202026%2C%2014_35_29.png",
-    "gallery": [],
-    "fields": [
-      {
-        "name": "Tamaño",
-        "value": "230 cm"
-      },
-      {
-        "name": "Tamañp cerrado",
-        "value": "110 cm"
-      }
-    ]
-  },
-  {
-    "name": "ryjxnt",
-    "cat": "Camping",
-    "price": 45,
-    "desc": "srthn",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Carpa%20plegable%20habit%C3%A1culo%20de%20camping%2010%20personas%20UPF50%2B%20Arpenaz%20Base%20L%20Fresh%20-%20QUECHUA%201.png",
-    "gallery": []
-  },
-  {
-    "name": "Jdbdkx",
-    "cat": "Camping",
-    "price": 25,
-    "desc": "Bckdksns",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/IMG_7823.png",
-    "gallery": [],
-    "fields": [
-      {
-        "name": "Medidas",
-        "value": "15 x 10 cm"
-      }
-    ]
-  },
-  {
-    "name": "tienda",
-    "cat": "Camping",
-    "price": 350,
-    "desc": "dfbfg",
-    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%201.png",
-    "gallery": [
-      "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%202.png",
-      "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%203.png"
-    ]
-  }
-]
+{
+  "categories": [
+    "Camping",
+    "Pesca",
+    "Tecnología"
+  ],
+  "products": [
+    {
+      "name": "",
+      "cat": "Camping",
+      "price": 0,
+      "desc": "",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788361576908.png",
+      "photoBg": "transparent",
+      "gallery": [],
+      "galleryBg": [],
+      "fields": []
+    },
+    {
+      "name": "",
+      "cat": "Camping",
+      "price": 0,
+      "desc": "",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788360129957.png",
+      "photoBg": "#FFFFFF",
+      "gallery": [],
+      "galleryBg": [],
+      "fields": []
+    },
+    {
+      "name": "",
+      "cat": "Camping",
+      "price": 0,
+      "desc": "",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788358792979.jpg",
+      "gallery": [],
+      "fields": []
+    },
+    {
+      "name": "",
+      "cat": "Camping",
+      "price": 0,
+      "desc": "",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/ChatGPT%20Image%2026%20ago%202026%2C%2015_19_13.png",
+      "gallery": [],
+      "fields": []
+    },
+    {
+      "name": "sb<wsa",
+      "cat": "Pesca",
+      "price": 35,
+      "desc": "fyughnfvb ",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343429811.png",
+      "photoBg": "auto",
+      "gallery": [
+        "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788343437745.png"
+      ],
+      "galleryBg": [
+        "auto"
+      ],
+      "fields": []
+    },
+    {
+      "name": "Caña pesca",
+      "cat": "Pesca",
+      "price": 25,
+      "desc": "Ukiyo 100 230",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/ChatGPT%20Image%2026%20ago%202026%2C%2014_35_29.png",
+      "gallery": [],
+      "fields": [
+        {
+          "name": "Tamaño",
+          "value": "230 cm"
+        },
+        {
+          "name": "Tamañp cerrado",
+          "value": "110 cm"
+        }
+      ]
+    },
+    {
+      "name": "ryjxnt",
+      "cat": "Camping",
+      "price": 45,
+      "desc": "srthn",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Carpa%20plegable%20habit%C3%A1culo%20de%20camping%2010%20personas%20UPF50%2B%20Arpenaz%20Base%20L%20Fresh%20-%20QUECHUA%201.png",
+      "gallery": []
+    },
+    {
+      "name": "Jdbdkx",
+      "cat": "Camping",
+      "price": 25,
+      "desc": "Bckdksns",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/IMG_7823.png",
+      "gallery": [],
+      "fields": [
+        {
+          "name": "Medidas",
+          "value": "15 x 10 cm"
+        }
+      ]
+    },
+    {
+      "name": "tienda",
+      "cat": "Camping",
+      "price": 350,
+      "desc": "dfbfg",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%201.png",
+      "gallery": [
+        "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%202.png",
+        "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/Tienda%20de%20campa%C3%B1a%20familiar%204%20personas%20hinchable%20Quechua%20Airseconds%204.1%20F%26B%203.png"
+      ]
+    }
+  ]
+}
