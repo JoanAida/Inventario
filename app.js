@@ -319,7 +319,9 @@ const p = index >= 0 ? products[index] : {
   price: "",
   desc: "",
   photo: "",
+  photoBg: "transparent",
   gallery: [],
+  galleryBg: [],
   fields: []
 };
 
@@ -373,15 +375,22 @@ const p = index >= 0 ? products[index] : {
   <div id="bgPanel" style="display:none;margin-top:10px">
   <div class="row" style="align-items:center">
 
-    <button class="btn sec" id="bgAuto">Auto</button>
+    <button class="btn sec" id="bgTransparent">Sin fondo</button>
 
-    <button class="colorPreset" data-color="#FFFFFF" style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+<button class="btn sec" id="bgAuto">Auto</button>
 
-    <button class="colorPreset" data-color="#F5F1E8" style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+<button class="colorPreset" data-color="#FFFFFF"
+style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
 
-    <button class="colorPreset" data-color="#1F2937" style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+<button class="colorPreset" data-color="#F5F1E8"
+style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
 
-    <input type="color" id="customColor" value="#ffffff" style="width:42px;height:34px;padding:0;border:none;background:none">
+<button class="colorPreset" data-color="#1F2937"
+style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
+
+<input type="color" id="customColor"
+value="#ffffff"
+style="width:42px;height:34px;padding:0;border:none;background:none">
 
   </div>
 </div>
@@ -514,7 +523,7 @@ const drawPreview = () => {
   
 function openCropper(index, foto){
 
-  let backgroundColor = foto.bg ?? "auto"; // auto | "#FFFFFF" | "#1F2937" | null
+  let backgroundColor = foto.bg ?? "transparent"; // auto | "#FFFFFF" | "#1F2937" | null
  
   const cropBox = bg.querySelector("#cropper");
   const canvas = bg.querySelector("#cropCanvas");
@@ -524,6 +533,7 @@ function openCropper(index, foto){
 const bgBtn = bg.querySelector("#bgBtn");
 const bgPanel = bg.querySelector("#bgPanel");
 const customColor = bg.querySelector("#customColor");
+const bgTransparent = bg.querySelector("#bgTransparent");
 const bgAuto = bg.querySelector("#bgAuto");
 const rotateBtn = bg.querySelector("#rotateBtn");
 const cancelCrop = bg.querySelector("#cancelCrop");
@@ -792,7 +802,10 @@ bgBtn.onclick = () => {
   bgPanel.style.display =
     bgPanel.style.display === "none" ? "block" : "none";
 };
-
+bgTransparent.onclick = () => {
+  backgroundColor = "transparent";
+  draw();
+};
 bgAuto.onclick = () => {
   backgroundColor = "auto";
   draw();
@@ -824,7 +837,7 @@ out.height = Math.round(crop.h);
 
 const o = out.getContext("2d");
 
-const transparent = backgroundColor === "auto";
+const transparent = backgroundColor === "transparent";
 
 if (!transparent) {
   o.fillStyle = backgroundColor;
@@ -927,7 +940,7 @@ for (const file of newFiles) {
 
   uploaded.push({
     url,
-    bg: file.bg || "auto"
+    bg: file.bg || "transparent"
   });
 }
 
@@ -950,10 +963,10 @@ const allPhotos = [
   desc: eDesc.value,
 
   photo: allPhotos[0]?.url || "",
-  photoBg: allPhotos[0]?.bg || "auto",
+  photoBg: allPhotos[0]?.bg || "transparent",
 
   gallery: allPhotos.slice(1).map(f => f.url),
-  galleryBg: allPhotos.slice(1).map(f => f.bg || "auto"),
+  galleryBg: allPhotos.slice(1).map(f => f.bg || "transparent"),
 
   fields
 };
