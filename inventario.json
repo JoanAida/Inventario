@@ -1,5 +1,23 @@
 [
   {
+    "name": "Caña pesca",
+    "cat": "Pesca",
+    "price": 25,
+    "desc": "Ukiyo 100 230",
+    "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/ChatGPT%20Image%2026%20ago%202026%2C%2014_35_29.png",
+    "gallery": [],
+    "fields": [
+      {
+        "name": "Tamaño",
+        "value": "230 cm"
+      },
+      {
+        "name": "Tamañp cerrado",
+        "value": "110 cm"
+      }
+    ]
+  },
+  {
     "name": "ryjxnt",
     "cat": "Camping",
     "price": 45,
