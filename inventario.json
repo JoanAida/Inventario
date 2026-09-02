@@ -7,6 +7,22 @@
   ],
   "products": [
     {
+      "name": "Jibionera Naranja 2,5",
+      "cat": "Pesca",
+      "price": 3.49,
+      "desc": "",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788386894089.png",
+      "photoBg": "transparent",
+      "gallery": [],
+      "galleryBg": [],
+      "fields": [
+        {
+          "name": "Tamaño",
+          "value": "2,5"
+        }
+      ]
+    },
+    {
       "name": "Jibionera 2.5",
       "cat": "Pesca",
       "price": 3.49,
