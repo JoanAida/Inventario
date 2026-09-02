@@ -506,8 +506,6 @@ let rotation = 0;
 let imgX = 0;
 let imgY = 0;
 
-let backgroundColor = null; // ← AÑADE ESTA LÍNEA
-
   canvas.width = 340;
   canvas.height = 420;
 
