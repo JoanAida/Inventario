@@ -3,9 +3,30 @@
     "Camping",
     "Pesca",
     "Tecnología",
-    "Playa"
+    "Playa",
+    "Garage"
   ],
   "products": [
+    {
+      "name": "Trepador",
+      "cat": "Camping",
+      "price": 900,
+      "desc": "Trepador 12,5 r15 ",
+      "photo": "https://cdn.jsdelivr.net/gh/JoanAida/Inventario@main/images/foto_1788557762878.png",
+      "photoBg": "transparent",
+      "gallery": [],
+      "galleryBg": [],
+      "fields": [
+        {
+          "name": "Cajon",
+          "value": "N2"
+        },
+        {
+          "name": "Pose",
+          "value": "5"
+        }
+      ]
+    },
     {
       "name": "Jibionera Naranja 2,5",
       "cat": "Pesca",
