@@ -1,1098 +1,500 @@
-const API = "https://inventario-api.joanvalenzuelabusquets.workers.dev";
-
-let CATS = ["Todos", "Camping", "Pesca", "Tecnología"];
-let filter = "Todos";
+const WORKER_URL = "https://inventario-api.paco-cf.workers.dev";
+let items = [];
+let categories = [];
+let activeCat = "Todas";
+let currentSlide = 0;
 let editIndex = -1;
 
-let products = [];
+const colModes = ["auto", "1", "2", "3", "4", "5"];
+let colIndex = colModes.indexOf(localStorage.getItem("inv_cols") || "auto");
+if (colIndex === -1) colIndex = 0;
 
-const app = document.getElementById("app");
+let cropState = {
+  img: null,
+  canvas: null,
+  ctx: null,
+  rotation: 0,
+  scale: 1,
+  offsetX: 0,
+  offsetY: 0,
+  isDragging: false,
+  startX: 0,
+  startY: 0,
+  onDone: null
+};
 
-async function saveDB() {
-  const res = await fetch(API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      action: "saveInventory",
-      categories: CATS.slice(1),
-      products
-    })
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  initUI();
+  applyColMode();
+  loadData();
+});
 
-  if (!res.ok) {
-    throw new Error(await res.text());
-  }
-}
+function initUI() {
+  const isLight = localStorage.getItem("inv_theme") === "light";
+  if (isLight) document.body.classList.add("light");
 
-async function loadDB() {
-  const res = await fetch(API);
-
-  if (!res.ok) {
-    products = [];
-    return;
-  }
-
-  const data = await res.json();
-
-  products = data.products || [];
-
-  CATS = [
-    "Todos",
-    ...(data.categories || ["Camping", "Pesca", "Tecnología"])
-  ];
-}
-
-async function uploadImage(file) {
-  const base64 = await new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(",")[1]);
-    reader.readAsDataURL(file);
-  });
-
-  const res = await fetch(API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      action: "uploadImage",
-      name: file.name,
-      image: base64
-    })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.error || "Error al subir la imagen");
-  }
-
-  return data.url;
-}
-
-async function deleteImage(url) {
-
-  const nombre = decodeURIComponent(
-    url.split("/images/")[1]
-  );
-
-  await fetch(API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      action: "deleteImage",
-      name: nombre
-    })
-  });
-}
-function render() {
+  const app = document.getElementById("app");
   app.innerHTML = `
     <header>
       <h1>Inventario</h1>
-      <button class="gear" id="gear">⚙️</button>
+      <div class="header-actions">
+        <button class="cols-btn" id="colsBtn" onclick="toggleCols()"></button>
+        <button class="gear" onclick="openSettings()">⚙️</button>
+      </div>
     </header>
 
     <div class="search">
-      <input id="search" placeholder="Buscar producto...">
+      <input type="text" id="searchInput" placeholder="Buscar por nombre, nota o campo..." oninput="renderGrid()">
     </div>
 
-    <div class="cats" id="cats"></div>
+    <div class="cats" id="catsBar"></div>
     <div class="grid" id="grid"></div>
 
-    <button class="fab" id="add">+</button>
+    <button class="fab" onclick="openForm()">+</button>
 
-<div class="overlay" id="settings">
-  <div class="sheet">
-    <h2>Ajustes</h2>
+    <div class="overlay" id="formOverlay">
+      <div class="sheet">
+        <h2 id="formTitle" style="margin-top:0">Nuevo Producto</h2>
+        
+        <label>Nombre</label>
+        <input type="text" id="fName" placeholder="Ej. Tienda de campaña">
 
-   <label>Apariencia</label>
+        <label>Categoría</label>
+        <select id="fCat"></select>
 
-<div class="row">
-  <button class="btn sec" id="dark">🌙 Oscuro</button>
-  <button class="btn pri" id="light">☀️ Claro</button>
-</div>
+        <label>Notas / Descripción</label>
+        <textarea id="fNotes" placeholder="Detalles, estado, ubicación..."></textarea>
 
-<hr style="margin:18px 0">
+        <label>Imágenes (puedes subir varias)</label>
+        <input type="file" id="fPhotos" multiple accept="image/*" onchange="handlePhotosSelect(event)">
+        <div class="gallery" id="fGallery"></div>
 
-<label>Categorías</label>
+        <div id="fCustomFields"></div>
+        <button class="btn sec" style="margin-top:10px; width:100%" onclick="addCustomFieldRow()">+ Añadir campo personalizado</button>
 
-<div id="catList"></div>
-
-<div class="row" style="margin-top:10px">
-  <input id="newCat" placeholder="Nueva categoría" style="flex:1">
-  <button class="btn pri" id="addCat">+</button>
-</div>
-
-<button class="btn sec" id="closeSettings" style="margin-top:12px">
-  Cerrar
-</button>
-  </div>
-</div>
-`;
-
-  drawCategories();
-  drawProducts();
-
-  document.getElementById("search").oninput = drawProducts;
-  add.onclick = () => openEditor();
-  gear.onclick = () => settings.classList.add("show");
-
-closeSettings.onclick = () => settings.classList.remove("show");
-
-dark.onclick = () => {
-  document.body.classList.remove("light");
-};
-
-light.onclick = () => {
-  document.body.classList.add("light");
-};
-
-drawCatManager();
-
-addCat.onclick = async () => {
-
-  const nombre = newCat.value.trim();
-
-  if (!nombre) return;
-
-  if (CATS.includes(nombre)) {
-    alert("Ya existe esa categoría");
-    return;
-  }
-
-  CATS.push(nombre);
-
-  await saveDB();
-
-  drawCategories();
-  drawCatManager();
-
-  newCat.value = "";
-
-};
-  
-}
-
-function drawCategories() {
-  cats.innerHTML = "";
-
-  CATS.forEach(c => {
-    const chip = document.createElement("div");
-    chip.className = "chip" + (filter === c ? " active" : "");
-    chip.textContent = c;
-
-    chip.onclick = () => {
-      filter = c;
-      drawCategories();
-      drawProducts();
-    };
-
-    cats.appendChild(chip);
-  });
-}
-
-function drawCatManager() {
-
-  const list = document.getElementById("catList");
-
-  if (!list) return;
-
-  list.innerHTML = "";
-
-  CATS.slice(1).forEach(cat => {
-
-    const row = document.createElement("div");
-
-    row.className = "row";
-    row.style.margin = "6px 0";
-
-    row.innerHTML = `
-      <div style="flex:1">${cat}</div>
-      <button class="btn sec">🗑️</button>
-    `;
-
-    row.querySelector("button").onclick = async () => {
-
-      if (products.some(p => p.cat === cat)) {
-        alert("Hay productos usando esta categoría");
-        return;
-      }
-
-      if (!confirm("¿Eliminar categoría?")) return;
-
-      CATS = CATS.filter(c => c !== cat);
-
-      if (filter === cat) filter = "Todos";
-
-      await saveDB();
-
-      drawCategories();
-      drawCatManager();
-      drawProducts();
-
-    };
-
-    list.appendChild(row);
-
-  });
-
-}
-
-function drawProducts() {
-  grid.innerHTML = "";
-
-  const txt = document
-  .getElementById("search")
-  .value.toLowerCase();
-
-  products
-    .filter(p =>
-      (filter === "Todos" || p.cat === filter) &&
-      p.name.toLowerCase().includes(txt)
-    )
-    .forEach(p => {
-      const realIndex = products.indexOf(p);
-
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <div class="cover" style="background:${
-  p.photoBg === "auto"
-    ? (document.body.classList.contains("light") ? "#F5F1E8" : "#111111")
-    : (p.photoBg || "transparent")
-}">
-  ${
-    p.photo
-      ? `<img src="${p.photo}" style="width:100%;height:100%;object-fit:contain;padding:8px">`
-      : p.emoji
-  }
-</div>
-        <div class="info">
-          <div class="name">${p.name}</div>
-          <div class="muted">${p.cat}</div>
-          <div>${p.price.toFixed(2)} €</div>
+        <div class="row" style="margin-top:20px">
+          <button class="btn sec" onclick="closeForm()">Cancelar</button>
+          <button class="btn pri" onclick="saveProduct()">Guardar</button>
         </div>
-      `;
+      </div>
+    </div>
 
-      card.onclick = () => openViewer(realIndex);
+    <div class="overlay" id="viewerOverlay">
+      <div class="sheet">
+        <div class="carousel" id="vCarousel">
+          <div class="track" id="vTrack"></div>
+          <button class="nav prev" onclick="prevSlide()">‹</button>
+          <button class="nav next" onclick="nextSlide()">›</button>
+        </div>
+        
+        <h2 id="vName" style="margin:0 0 6px 0"></h2>
+        <div id="vCat" class="muted" style="margin-bottom:12px"></div>
+        <div id="vNotes" style="white-space:pre-line; margin-bottom:16px"></div>
+        
+        <div class="customFields" id="vCustomFields"></div>
 
-      grid.appendChild(card);
-    });
+        <div class="row" style="margin-top:20px">
+          <button class="btn sec" onclick="closeViewer()">Cerrar</button>
+          <button class="btn sec" onclick="editCurrentProduct()">Editar</button>
+          <button class="btn sec" style="color:#ef4444" onclick="deleteCurrentProduct()">Borrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="settingsOverlay">
+      <div class="sheet">
+        <h2 style="margin-top:0">Ajustes</h2>
+        
+        <label>Tema de color</label>
+        <div class="row">
+          <button class="btn sec" onclick="setTheme('dark')">🌙 Oscuro</button>
+          <button class="btn sec" onclick="setTheme('light')">☀️ Claro</button>
+        </div>
+
+        <label>Categorías (separadas por coma)</label>
+        <input type="text" id="sCats">
+
+        <div class="row" style="margin-top:20px">
+          <button class="btn sec" onclick="closeSettings()">Cancelar</button>
+          <button class="btn pri" onclick="saveSettings()">Guardar Ajustes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cropper" id="cropperOverlay">
+      <canvas id="cropCanvas"></canvas>
+      <div class="row" style="margin-top:14px; gap:8px">
+        <button class="btn sec" id="rotateBtn" onclick="rotateCropper()">🔄 Rotar</button>
+        <button class="btn sec" id="cancelCrop" onclick="closeCropper()">Cancelar</button>
+        <button class="btn pri" id="useCrop" onclick="confirmCrop()">Aceptar</button>
+      </div>
+    </div>
+  `;
 }
+
+function toggleCols() {
+  colIndex = (colIndex + 1) % colModes.length;
+  const mode = colModes[colIndex];
+  localStorage.setItem("inv_cols", mode);
+  applyColMode();
+}
+
+function applyColMode() {
+  const mode = colModes[colIndex];
+  const btn = document.getElementById("colsBtn");
+  const root = document.documentElement;
+
+  if (btn) {
+    btn.textContent = mode === "auto" ? "📐 Auto" : `📐 ${mode} col`;
+  }
+
+  if (mode === "auto") {
+    root.style.setProperty("--cols", "auto-fill");
+    root.style.setProperty("--min-col-width", "140px");
+  } else {
+    root.style.setProperty("--cols", mode);
+    root.style.setProperty("--min-col-width", "0px");
+  }
+}
+
+function setTheme(theme) {
+  if (theme === "light") {
+    document.body.classList.add("light");
+    localStorage.setItem("inv_theme", "light");
+  } else {
+    document.body.classList.remove("light");
+    localStorage.setItem("inv_theme", "dark");
+  }
+  closeSettings();
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(`${WORKER_URL}/get`);
+    const data = await res.json();
+    items = data.items || [];
+    categories = data.categories || ["General", "Camping", "Pesca", "Tecnología"];
+    renderCats();
+    renderGrid();
+  } catch (e) {
+    console.error("Error cargando datos:", e);
+  }
+}
+
+function renderCats() {
+  const bar = document.getElementById("catsBar");
+  const list = ["Todas", ...categories];
+  bar.innerHTML = list.map(c => `
+    <div class="chip ${c === activeCat ? 'active' : ''}" onclick="selectCat('${c}')">${c}</div>
+  `).join("");
+}
+
+function selectCat(cat) {
+  activeCat = cat;
+  renderCats();
+  renderGrid();
+}
+
+function renderGrid() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const grid = document.getElementById("grid");
+  
+  const filtered = items.filter(item => {
+    const matchCat = activeCat === "Todas" || item.category === activeCat;
+    const matchQ = !q || 
+      (item.name && item.name.toLowerCase().includes(q)) ||
+      (item.notes && item.notes.toLowerCase().includes(q)) ||
+      (item.customFields && JSON.stringify(item.customFields).toLowerCase().includes(q));
+    return matchCat && matchQ;
+  });
+
+  grid.innerHTML = filtered.map((item, idx) => {
+    const originalIndex = items.indexOf(item);
+    const coverImg = item.images && item.images.length > 0 ? 
+      `<img src="${item.images[0]}" loading="lazy">` : `📦`;
+
+    return `
+      <div class="card" onclick="openViewer(${originalIndex})">
+        <div class="cover">${coverImg}</div>
+        <div class="info">
+          <div class="name">${item.name || "Sin nombre"}</div>
+          <div class="muted">${item.category || "General"}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openForm(index = -1) {
+  editIndex = index;
+  document.getElementById("formTitle").textContent = index >= 0 ? "Editar Producto" : "Nuevo Producto";
+  
+  const selCat = document.getElementById("fCat");
+  selCat.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join("");
+
+  if (index >= 0) {
+    const item = items[index];
+    document.getElementById("fName").value = item.name || "";
+    document.getElementById("fCat").value = item.category || categories[0];
+    document.getElementById("fNotes").value = item.notes || "";
+    renderFormGallery(item.images || []);
+    renderCustomFieldInputs(item.customFields || []);
+  } else {
+    document.getElementById("fName").value = "";
+    document.getElementById("fCat").value = categories[0] || "General";
+    document.getElementById("fNotes").value = "";
+    renderFormGallery([]);
+    renderCustomFieldInputs([]);
+  }
+
+  document.getElementById("formOverlay").classList.add("show");
+}
+
+function closeForm() {
+  document.getElementById("formOverlay").classList.remove("show");
+}
+
+let tempImages = [];
+
+function renderFormGallery(imgs) {
+  tempImages = [...imgs];
+  const gal = document.getElementById("fGallery");
+  gal.innerHTML = tempImages.map((src, i) => `
+    <div style="position:relative; display:inline-block">
+      <img src="${src}" style="width:70px; height:70px; object-fit:cover; border-radius:8px">
+      <button onclick="removeTempImg(${i})" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer">×</button>
+    </div>
+  `).join("");
+}
+
+function removeTempImg(i) {
+  tempImages.splice(i, 1);
+  renderFormGallery(tempImages);
+}
+
+function handlePhotosSelect(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+
+  let fileIndex = 0;
+  function processNext() {
+    if (fileIndex >= files.length) return;
+    const file = files[fileIndex++];
+    openCropper(file, base64 => {
+      tempImages.push(base64);
+      renderFormGallery(tempImages);
+      processNext();
+    });
+  }
+  processNext();
+}
+
+function renderCustomFieldInputs(fields) {
+  const container = document.getElementById("fCustomFields");
+  container.innerHTML = fields.map((f, i) => `
+    <div class="row" style="margin-top:8px">
+      <input type="text" placeholder="Nombre (ej. Precio)" value="${f.name || ''}" class="fKey">
+      <input type="text" placeholder="Valor (ej. 25€)" value="${f.value || ''}" class="fVal">
+      <button class="btn sec" style="width:44px; color:#ef4444" onclick="this.parentElement.remove()">×</button>
+    </div>
+  `).join("");
+}
+
+function addCustomFieldRow() {
+  const container = document.getElementById("fCustomFields");
+  const div = document.createElement("div");
+  div.className = "row";
+  div.style.marginTop = "8px";
+  div.innerHTML = `
+    <input type="text" placeholder="Nombre (ej. Precio)" class="fKey">
+    <input type="text" placeholder="Valor (ej. 25€)" class="fVal">
+    <button class="btn sec" style="width:44px; color:#ef4444" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(div);
+}
+
+async function saveProduct() {
+  const name = document.getElementById("fName").value.trim();
+  const category = document.getElementById("fCat").value;
+  const notes = document.getElementById("fNotes").value.trim();
+
+  const keys = Array.from(document.querySelectorAll(".fKey"));
+  const vals = Array.from(document.querySelectorAll(".fVal"));
+  const customFields = keys.map((k, i) => ({
+    name: k.value.trim(),
+    value: vals[i].value.trim()
+  })).filter(f => f.name);
+
+  const product = { name, category, notes, images: tempImages, customFields };
+
+  if (editIndex >= 0) {
+    items[editIndex] = product;
+  } else {
+    items.unshift(product);
+  }
+
+  closeForm();
+  renderGrid();
+  await syncWithWorker();
+}
+
+let activeViewerIndex = -1;
 
 function openViewer(index) {
-  const p = products[index];
+  activeViewerIndex = index;
+  const item = items[index];
+  currentSlide = 0;
 
-  const bg = document.createElement("div");
-  bg.className = "overlay show";
+  document.getElementById("vName").textContent = item.name || "Sin nombre";
+  document.getElementById("vCat").textContent = item.category || "General";
+  document.getElementById("vNotes").textContent = item.notes || "";
 
-  bg.innerHTML = `
-    <div class="sheet">
-      <button id="closeView">✕</button>
-
-<div class="carousel">
-  <div class="track" id="track">
-  ${
-    [p.photo, ...(p.gallery || [])]
-      .filter(Boolean)
-      .map((img, i) => `
-        <div class="slide" style="background:${
-          (i === 0 ? p.photoBg : p.galleryBg?.[i-1]) === "auto"
-            ? (document.body.classList.contains("light") ? "#F5F1E8" : "#111111")
-            : ((i === 0 ? p.photoBg : p.galleryBg?.[i-1]) || "transparent")
-        }">
-          <img src="${img}">
-        </div>
-      `).join("")
+  const track = document.getElementById("vTrack");
+  if (item.images && item.images.length > 0) {
+    track.innerHTML = item.images.map(img => `
+      <div class="slide"><img src="${img}"></div>
+    `).join("");
+  } else {
+    track.innerHTML = `<div class="slide" style="font-size:80px">📦</div>`;
   }
-</div>
+  updateCarousel();
 
-  <button class="nav prev" id="prev">‹</button>
-  <button class="nav next" id="next">›</button>
-</div>
-
-      <h2>${p.name}</h2>
-      <div class="muted">${p.cat}</div>
-      <h3>${p.price.toFixed(2)} €</h3>
-
-<p>${p.desc || "Sin descripción"}</p>
-
-${
-  (p.fields && p.fields.length)
-    ? `
-      <div class="customFields">
-        ${p.fields.map(f => `
-          <div class="fieldRow">
-            <div class="fieldName">${f.name}</div>
-            <div class="fieldValue">${f.value}</div>
-          </div>
-        `).join("")}
+  const customFieldsDiv = document.getElementById("vCustomFields");
+  if (item.customFields && item.customFields.length > 0) {
+    customFieldsDiv.innerHTML = item.customFields.map(f => `
+      <div class="fieldRow">
+        <span class="fieldName">${f.name}</span>
+        <span class="fieldValue">${f.value}</span>
       </div>
-    `
-    : ""
+    `).join("");
+  } else {
+    customFieldsDiv.innerHTML = "";
+  }
+
+  document.getElementById("viewerOverlay").classList.add("show");
 }
 
-<div class="row" style="margin-top:20px">
-  <button class="btn pri" id="edit">Editar</button>
-  <button class="btn sec" id="del">Borrar</button>
-</div>
-    </div>
-  `;
-
-  document.body.appendChild(bg);
-  
-  let current = 0;
-const total = [p.photo, ...(p.gallery || [])].filter(Boolean).length;
+function closeViewer() {
+  document.getElementById("viewerOverlay").classList.remove("show");
+}
 
 function updateCarousel() {
-  track.style.transform = `translateX(-${current * 100}%)`;
+  const track = document.getElementById("vTrack");
+  track.style.transform = `translateX(-${currentSlide * 100}%)`;
 }
 
-if (total > 1) {
-  next.onclick = () => {
-    current = Math.min(current + 1, total - 1);
-    updateCarousel();
-  };
-
-  prev.onclick = () => {
-    current = Math.max(current - 1, 0);
-    updateCarousel();
-  };
+function prevSlide() {
+  const item = items[activeViewerIndex];
+  const total = item.images ? item.images.length : 1;
+  currentSlide = (currentSlide - 1 + total) % total;
+  updateCarousel();
 }
 
-  closeView.onclick = () => bg.remove();
+function nextSlide() {
+  const item = items[activeViewerIndex];
+  const total = item.images ? item.images.length : 1;
+  currentSlide = (currentSlide + 1) % total;
+  updateCarousel();
+}
 
-  edit.onclick = () => {
-    bg.remove();
-    openEditor(index);
-  };
+function editCurrentProduct() {
+  closeViewer();
+  openForm(activeViewerIndex);
+}
 
- del.onclick = async () => {
-  if (!confirm("¿Borrar este producto?")) return;
+async function deleteCurrentProduct() {
+  if (!confirm("¿Seguro que quieres borrar este producto?")) return;
+  items.splice(activeViewerIndex, 1);
+  closeViewer();
+  renderGrid();
+  await syncWithWorker();
+}
 
-  const fotos = [p.photo, ...(p.gallery || [])].filter(Boolean);
+function openSettings() {
+  document.getElementById("sCats").value = categories.join(", ");
+  document.getElementById("settingsOverlay").classList.add("show");
+}
 
+function closeSettings() {
+  document.getElementById("settingsOverlay").classList.remove("show");
+}
+
+async function saveSettings() {
+  const raw = document.getElementById("sCats").value;
+  categories = raw.split(",").map(c => c.trim()).filter(Boolean);
+  if (!categories.length) categories = ["General"];
+  
+  closeSettings();
+  renderCats();
+  renderGrid();
+  await syncWithWorker();
+}
+
+async function syncWithWorker() {
   try {
-    for (const url of fotos) {
-      await deleteImage(url);
-    }
-
-    products.splice(index, 1);
-await saveDB();
-bg.remove();
-drawProducts();
-
-  } catch (err) {
-    console.error(err);
-    alert("Error al borrar las fotos de GitHub");
+    await fetch(`${WORKER_URL}/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items, categories })
+    });
+  } catch (e) {
+    console.error("Error guardando datos:", e);
   }
-};
-
-bg.onclick = e => {
-  if (e.target === bg) {
-    bg.remove();
-  }
-};
 }
 
-function openEditor(index = -1) {
-  editIndex = index;
-
-const p = index >= 0 ? products[index] : {
-  name: "",
-  cat: "Camping",
-  price: "",
-  desc: "",
-  photo: "",
-  photoBg: "transparent",
-  gallery: [],
-  galleryBg: [],
-  fields: []
-};
-
-  const bg = document.createElement("div");
-  bg.className = "overlay show";
-
-  bg.innerHTML = `
-    <div class="sheet">
-      <h2>${index >= 0 ? "Editar" : "Nuevo"} producto</h2>
-
-      <label>Nombre</label>
-      <input id="eName" value="${p.name}">
-
-      <div class="row">
-        <div style="flex:1">
-          <label>Precio</label>
-          <input id="ePrice" type="number" value="${p.price}">
-        </div>
-
-        <div style="flex:1">
-          <label>Categoría</label>
-          <select id="eCat">
-            ${CATS.slice(1).map(c=>`<option ${c===p.cat?"selected":""}>${c}</option>`).join("")}
-          </select>
-        </div>
-      </div>
-
-      <label>Descripción</label>
-      <textarea id="eDesc">${p.desc}</textarea>
-
-    <label>Campos personalizados</label>
-
-<div id="fieldsContainer"></div>
-
-<button type="button" class="btn sec" id="addField" style="margin:10px 0">
-  + Añadir campo
-</button>
-
-<label>Fotos</label>
-<input id="ePhotos" type="file" accept="image/*" multiple>
-
-<div id="galleryPreview" class="gallery"></div>
-<div id="cropper" class="cropper" style="display:none">
-  <canvas id="cropCanvas"></canvas>
-
-  <div class="row" style="margin-top:12px">
-    <button class="btn sec" id="rotateBtn">↻ Girar</button>
-    <button class="btn sec" id="bgBtn">🖼 Fondo</button>
-  </div>
-
-  <div id="bgPanel" style="display:none;margin-top:10px">
-  <div class="row" style="align-items:center">
-
-    <button class="btn sec" id="bgTransparent">Sin fondo</button>
-
-<button class="btn sec" id="bgAuto">Auto</button>
-
-<button class="colorPreset" data-color="#FFFFFF"
-style="background:#FFFFFF;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
-
-<button class="colorPreset" data-color="#F5F1E8"
-style="background:#F5F1E8;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
-
-<button class="colorPreset" data-color="#1F2937"
-style="background:#1F2937;width:34px;height:34px;border-radius:50%;border:1px solid #888"></button>
-
-<input type="color" id="customColor"
-value="#ffffff"
-style="width:42px;height:34px;padding:0;border:none;background:none">
-
-  </div>
-</div>
-
-  <div class="row" style="margin-top:12px">
-    <button class="btn sec" id="cancelCrop">Cancelar</button>
-    <button class="btn pri" id="useCrop">Usar</button>
-  </div>
-</div>
-
-      <div class="row" style="margin-top:18px">
-        <button class="btn sec" id="cancel">Cancelar</button>
-        <button class="btn pri" id="save">Guardar</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(bg);
-
-  const eName = bg.querySelector("#eName");
-  const ePrice = bg.querySelector("#ePrice");
-  const eCat = bg.querySelector("#eCat");
-  const eDesc = bg.querySelector("#eDesc");
-  const ePhotos = bg.querySelector("#ePhotos");
-  const preview = bg.querySelector("#galleryPreview");
-  const fieldsContainer = bg.querySelector("#fieldsContainer");
-  const addFieldBtn = bg.querySelector("#addField");
-  const btnSave = bg.querySelector("#save");
-  const btnCancel = bg.querySelector("#cancel");
-
- let gallery = [p.photo, ...(p.gallery || [])].filter(Boolean);
-  let newFiles = [];
-  let fields = [...(p.fields || [])];
-
-  function drawFields() {
-
-  fieldsContainer.innerHTML = "";
-
-  fields.forEach((field, i) => {
-
-    const div = document.createElement("div");
-
-    div.className = "row";
-
-    div.style.marginBottom = "8px";
-
-    div.innerHTML = `
-      <input class="fName" placeholder="Campo" value="${field.name}" style="flex:1">
-      <input class="fValue" placeholder="Valor" value="${field.value}" style="flex:1">
-      <button class="btn sec remove">✕</button>
-    `;
-
-    div.querySelector(".fName").oninput = e => fields[i].name = e.target.value;
-    div.querySelector(".fValue").oninput = e => fields[i].value = e.target.value;
-
-    div.querySelector(".remove").onclick = () => {
-      fields.splice(i,1);
-      drawFields();
+/* RECORTADOR DE IMÁGENES */
+function openCropper(file, onDone) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      cropState.img = img;
+      cropState.rotation = 0;
+      cropState.scale = 1;
+      cropState.offsetX = 0;
+      cropState.offsetY = 0;
+      cropState.onDone = onDone;
+      
+      const overlay = document.getElementById("cropperOverlay");
+      overlay.classList.add("show");
+      
+      cropState.canvas = document.getElementById("cropCanvas");
+      cropState.ctx = cropState.canvas.getContext("2d");
+      cropState.canvas.width = 320;
+      cropState.canvas.height = 320;
+      
+      drawCropper();
     };
-
-    fieldsContainer.appendChild(div);
-
-  });
-
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
+
+function drawCropper() {
+  const { ctx, canvas, img, rotation } = cropState;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-const drawPreview = () => {
-
-  preview.innerHTML = "";
-
-  const fotos = [
-  ...gallery.map((item, i) => ({
-    file: item instanceof File ? item : null,
-    url: item instanceof File ? URL.createObjectURL(item) : item,
-    existing: true,
-    bg:
-      item.bg ??
-      (i === 0
-        ? (p.photoBg || "auto")
-        : (p.galleryBg?.[i - 1] || "auto"))
-  })),
-
-  ...newFiles.map(file => ({
-    file,
-    url: URL.createObjectURL(file),
-    existing: false,
-    bg: file.bg || "transparent"
-  }))
-];
-
-  fotos.forEach((foto, i) => {
-
-    const card = document.createElement("div");
-    card.className = "photoCard";
-
-    card.innerHTML = `
-      <img src="${foto.url}">
-      <button class="editPhoto">✏️</button>
-      <button class="deletePhoto">🗑️</button>
-    `;
-
-    // BORRAR
-    card.querySelector(".deletePhoto").onclick = () => {
-
-    if (foto.existing) {
-  const item = gallery[i];
-
-  if (item instanceof File) {
-    newFiles = newFiles.filter(f => f !== item);
-  }
-
-  gallery.splice(i, 1);
-} else {
-  newFiles.splice(i - gallery.length, 1);
-}
-
-      drawPreview();
-    };
-
-    // EDITAR
-    card.querySelector(".editPhoto").onclick = () => {
-      openCropper(i, foto);
-    };
-
-    preview.appendChild(card);
-
-  });
-
-};
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((rotation * Math.PI) / 180);
   
-function openCropper(index, foto){
-
-  let backgroundColor = foto.bg ?? "transparent"; // auto | "#FFFFFF" | "#1F2937" | null
- 
-  const cropBox = bg.querySelector("#cropper");
-  const canvas = bg.querySelector("#cropCanvas");
-  canvas.style.touchAction = "none";
-  const ctx = canvas.getContext("2d");
-
-const bgBtn = bg.querySelector("#bgBtn");
-const bgPanel = bg.querySelector("#bgPanel");
-const customColor = bg.querySelector("#customColor");
-const bgTransparent = bg.querySelector("#bgTransparent");
-const bgAuto = bg.querySelector("#bgAuto");
-const rotateBtn = bg.querySelector("#rotateBtn");
-const cancelCrop = bg.querySelector("#cancelCrop");
-const useCrop = bg.querySelector("#useCrop");
-const img = new Image();
-
-let scale = 1;
-let rotation = 0;
-let imgX = 0;
-let imgY = 0;
-
-  canvas.width = 340;
-  canvas.height = 420;
-
-  const crop = {
-    x:30,
-    y:50,
-    w:280,
-    h:280
-  };
-
-  const HANDLE = 18;
-
- img.onload = () => {
-
-  cropBox.style.display = "flex";
-  cropBox.classList.add("show");
-  cropBox.style.pointerEvents = "auto";
-
-  scale = Math.min(
-    crop.w / img.width,
-    crop.h / img.height
-  );
-
-  imgX = canvas.width / 2;
-  imgY = canvas.height / 2;
-
-  draw();
-};
-
-  img.src = foto.url;
-
-  function draw(){
-
-    ctx.clearRect(0,0,340,420);
-
-   let canvasColor;
-
-if (backgroundColor === "auto") {
-  canvasColor = document.body.classList.contains("light")
-    ? "#F5F1E8"
-    : "#111111";
-} else {
-  canvasColor = backgroundColor;
+  const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+  ctx.drawImage(img, - (img.width * scale) / 2, - (img.height * scale) / 2, img.width * scale, img.height * scale);
+  ctx.restore();
 }
 
-    ctx.fillStyle = canvasColor;
-    
-    ctx.fillRect(0,0,340,420);
-
-    ctx.save();
-
-    ctx.translate(imgX,imgY);
-    ctx.rotate(rotation*Math.PI/180);
-    ctx.scale(scale,scale);
-
-    ctx.drawImage(img,-img.width/2,-img.height/2);
-
-    ctx.restore();
-
-    ctx.fillStyle="rgba(0,0,0,.55)";
-    ctx.fillRect(0,0,340,crop.y);
-    ctx.fillRect(0,crop.y,crop.x,crop.h);
-    ctx.fillRect(crop.x+crop.w,crop.y,340,crop.h);
-    ctx.fillRect(0,crop.y+crop.h,340,420);
-
-    ctx.strokeStyle="#fff";
-    ctx.lineWidth=2;
-    ctx.strokeRect(crop.x,crop.y,crop.w,crop.h);
-
-    // Esquinas
-    drawHandle(crop.x, crop.y);
-    drawHandle(crop.x + crop.w, crop.y);
-    drawHandle(crop.x, crop.y + crop.h);
-    drawHandle(crop.x + crop.w, crop.y + crop.h);
-
-    // Laterales
-    drawHandle(crop.x + crop.w/2, crop.y);
-    drawHandle(crop.x + crop.w/2, crop.y + crop.h);
-    drawHandle(crop.x, crop.y + crop.h/2);
-    drawHandle(crop.x + crop.w, crop.y + crop.h/2);
-  }
-
-  function drawHandle(x,y){
-    ctx.fillStyle="#fff";
-    ctx.beginPath();
-    ctx.arc(x,y,6,0,Math.PI*2);
-    ctx.fill();
-  }
-
-  function dist(ax,ay,bx,by){
-    return Math.hypot(ax-bx, ay-by);
-  }
-
-  let mode = null;
-  let start = {};
-
-  canvas.onpointerdown = e => {
-
-    const r = canvas.getBoundingClientRect();
-    const x = (e.clientX-r.left)*(340/r.width);
-    const y = (e.clientY-r.top)*(420/r.height);
-
-    start = {x,y,crop:{...crop}};
-
-    const mx = crop.x + crop.w/2;
-    const my = crop.y + crop.h/2;
-
-    if (dist(x,y,crop.x,crop.y)<HANDLE) mode="tl";
-    else if (dist(x,y,crop.x+crop.w,crop.y)<HANDLE) mode="tr";
-    else if (dist(x,y,crop.x,crop.y+crop.h)<HANDLE) mode="bl";
-    else if (dist(x,y,crop.x+crop.w,crop.y+crop.h)<HANDLE) mode="br";
-    else if (dist(x,y,mx,crop.y)<HANDLE) mode="top";
-    else if (dist(x,y,mx,crop.y+crop.h)<HANDLE) mode="bottom";
-    else if (dist(x,y,crop.x,my)<HANDLE) mode="left";
-    else if (dist(x,y,crop.x+crop.w,my)<HANDLE) mode="right";
-    else if (x>crop.x && x<crop.x+crop.w && y>crop.y && y<crop.y+crop.h) mode="move";
-
-    if(mode) canvas.setPointerCapture(e.pointerId);
-  };
-
-  canvas.onpointermove = e => {
-
-    if(!mode) return;
-
-    const r = canvas.getBoundingClientRect();
-    const x = (e.clientX-r.left)*(340/r.width);
-    const y = (e.clientY-r.top)*(420/r.height);
-
-    const dx = x-start.x;
-    const dy = y-start.y;
-
-    if(mode==="move"){
-      imgX += dx;
-      imgY += dy;
-      start.x = x;
-      start.y = y;
-    }
-
-    if(mode==="tl"){
-      crop.x=Math.min(start.crop.x+dx,start.crop.x+start.crop.w-60);
-      crop.y=Math.min(start.crop.y+dy,start.crop.y+start.crop.h-60);
-      crop.w=start.crop.w-(crop.x-start.crop.x);
-      crop.h=start.crop.h-(crop.y-start.crop.y);
-    }
-
-    if(mode==="tr"){
-      crop.y=Math.min(start.crop.y+dy,start.crop.y+start.crop.h-60);
-      crop.w=Math.max(60,start.crop.w+dx);
-      crop.h=start.crop.h-(crop.y-start.crop.y);
-    }
-
-    if(mode==="bl"){
-      crop.x=Math.min(start.crop.x+dx,start.crop.x+start.crop.w-60);
-      crop.w=start.crop.w-(crop.x-start.crop.x);
-      crop.h=Math.max(60,start.crop.h+dy);
-    }
-
-    if(mode==="br"){
-      crop.w=Math.max(60,start.crop.w+dx);
-      crop.h=Math.max(60,start.crop.h+dy);
-    }
-
-    if(mode==="top"){
-      crop.y=Math.min(start.crop.y+dy,start.crop.y+start.crop.h-60);
-      crop.h=start.crop.h-(crop.y-start.crop.y);
-    }
-
-    if(mode==="bottom"){
-      crop.h=Math.max(60,start.crop.h+dy);
-    }
-
-    if(mode==="left"){
-      crop.x=Math.min(start.crop.x+dx,start.crop.x+start.crop.w-60);
-      crop.w=start.crop.w-(crop.x-start.crop.x);
-    }
-
-    if(mode==="right"){
-      crop.w=Math.max(60,start.crop.w+dx);
-    }
-
-    draw();
-  };
-
-canvas.onpointerup = e => {
-  mode = null;
-
-  try{
-    if(canvas.hasPointerCapture(e.pointerId)){
-      canvas.releasePointerCapture(e.pointerId);
-    }
-  }catch{}
-};
-
-canvas.onpointerleave = () => {
-  mode = null;
-};
-
-canvas.onpointercancel = e => {
-  mode = null;
-
-  try{
-    if(canvas.hasPointerCapture(e.pointerId)){
-      canvas.releasePointerCapture(e.pointerId);
-    }
-  }catch{}
-};
-
-  canvas.onwheel = e => {
-    e.preventDefault();
-    scale *= e.deltaY>0 ? 0.95 : 1.05;
-    draw();
-  };
-
-  let pinchStart = null;
-
-canvas.ontouchstart = e => {
-  if (e.touches.length === 2) {
-    const a = e.touches[0];
-    const b = e.touches[1];
-    pinchStart = Math.hypot(
-      a.clientX - b.clientX,
-      a.clientY - b.clientY
-    );
-  }
-};
-
-canvas.ontouchmove = e => {
-  if (e.touches.length !== 2 || !pinchStart) return;
-
-  e.preventDefault();
-
-  const a = e.touches[0];
-  const b = e.touches[1];
-
-  const d = Math.hypot(
-    a.clientX - b.clientX,
-    a.clientY - b.clientY
-  );
-
-  scale *= d / pinchStart;
-  pinchStart = d;
-
-  draw();
-};
-
-canvas.ontouchend = () => pinchStart = null;
-canvas.ontouchcancel = () => pinchStart = null;
-
-  rotateBtn.onclick = () => {
-    rotation=(rotation+90)%360;
-    draw();
-  };
-
-bgBtn.onclick = () => {
-  bgPanel.style.display =
-    bgPanel.style.display === "none" ? "block" : "none";
-};
-bgTransparent.onclick = () => {
-  backgroundColor = "transparent";
-  bgPanel.style.display = "none";
-  draw();
-};
-
-bgAuto.onclick = () => {
-  backgroundColor = "auto";
-  bgPanel.style.display = "none";
-  draw();
-};
-
-bg.querySelectorAll(".colorPreset").forEach(btn => {
-  btn.onclick = () => {
-    backgroundColor = btn.dataset.color;
-    customColor.value = backgroundColor;
-    bgPanel.style.display = "none";
-    draw();
-  };
-});
-
-customColor.oninput = e => {
-  backgroundColor = e.target.value;
-  draw();
-};
-  
-  cancelCrop.onclick = () => {
-  cropBox.classList.remove("show");
-  cropBox.style.display = "none";
-};
-
-  const applyCrop = () => {
-const out = document.createElement("canvas");
-
-out.width = Math.round(crop.w);
-out.height = Math.round(crop.h);
-
-const o = out.getContext("2d");
-
-const transparent = backgroundColor === "transparent";
-
-if (!transparent) {
-  o.fillStyle = backgroundColor;
-  o.fillRect(0, 0, out.width, out.height);
+function rotateCropper() {
+  cropState.rotation = (cropState.rotation + 90) % 360;
+  drawCropper();
 }
 
-o.save();
-
-o.translate(-crop.x, -crop.y);
-o.translate(imgX, imgY);
-o.rotate(rotation * Math.PI / 180);
-o.scale(scale, scale);
-
-o.drawImage(img, -img.width / 2, -img.height / 2);
-
-o.restore();
-
-out.toBlob((blob) => {
-    if (!blob) {
-      alert("Error al recortar");
-      return;
-    }
-
-const type = "image/png";
-const ext = "png";
-
-    const file = new File(
-      [blob],
-      `foto_${Date.now()}.${ext}`,
-      { type }
-    );
-
-   file.bg = backgroundColor;
-
-if (foto.existing) {
-  gallery[index] = file;
-} else {
-  newFiles[index - gallery.length] = file;
+function closeCropper() {
+  document.getElementById("cropperOverlay").classList.remove("show");
 }
 
-cropBox.classList.remove("show");
-cropBox.style.display = "none";
-
-drawPreview();
-}, "image/png");
-};
-
-// FORZAR QUE EL BOTÓN FUNCIONE
-useCrop.type = "button";
-
-useCrop.onclick = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  applyCrop();
-};
-
+function confirmCrop() {
+  const canvas = cropState.canvas;
+  const base64 = canvas.toDataURL("image/jpeg", 0.85);
+  closeCropper();
+  if (cropState.onDone) cropState.onDone(base64);
 }
-  
-drawFields();
-drawPreview();
-
-
-addFieldBtn.onclick = () => {
-  fields.push({ name: "", value: "" });
-  drawFields();
-};
-
-ePhotos.onchange = () => {
-  const files = [...ePhotos.files];
-  newFiles.push(...files);
-  drawPreview();
-  ePhotos.value = "";
-};
-
-btnCancel.onclick = () => bg.remove();
-
-btnSave.onclick = async () => {
-  try {
-    btnSave.disabled = true;
-    btnSave.textContent = "Subiendo...";
-
-  // Subir las fotos editadas y borrar las antiguas de GitHub
-for (let i = 0; i < gallery.length; i++) {
-  if (gallery[i] instanceof File) {
-    const antigua = [p.photo, ...(p.gallery || [])][i];
-
-    if (antigua) {
-      await deleteImage(antigua);
-    }
-
-    gallery[i] = await uploadImage(gallery[i]);
-  }
-}
-
-    // Subir las fotos nuevas
-    const uploaded = [];
-
-for (const file of newFiles) {
-  const url = await uploadImage(file);
-
-  uploaded.push({
-    url,
-    bg: file.bg || "transparent"
-  });
-}
-
-const allPhotos = [
-  ...gallery.map((item, i) => ({
-    url: typeof item === "string" ? item : item.url,
-    bg:
-      item.bg ??
-      (i === 0
-        ? (p.photoBg || "auto")
-        : (p.galleryBg?.[i - 1] || "auto"))
-  })),
-  ...uploaded
-];
-
-    const obj = {
-  name: eName.value,
-  cat: eCat.value,
-  price: Number(ePrice.value || 0),
-  desc: eDesc.value,
-
-  photo: allPhotos[0]?.url || "",
-  photoBg: allPhotos[0]?.bg ?? "transparent",
-
-  gallery: allPhotos.slice(1).map(f => f.url),
-  galleryBg: allPhotos.slice(1).map(f => f.bg ?? "transparent"),
-
-  fields
-};
-
-    if (editIndex >= 0) products[editIndex] = obj;
-    else products.unshift(obj);
-
-    await saveDB();
-    bg.remove();
-    drawProducts();
-
- } catch (err) {
-  console.error(err);
-  btnSave.disabled = false;
-  btnSave.textContent = "Guardar";
-  alert(err.message);
- }
-};
-
-bg.onclick = e => {
-  const cropper = bg.querySelector("#cropper");
-
-  if (cropper && cropper.classList.contains("show")) return;
-
-  if (e.target === bg) {
-    bg.remove();
-  }
-};
-
-}
-  
-(async () => {
-  await loadDB();
-  render();
-})();
