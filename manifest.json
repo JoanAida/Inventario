@@ -1,17 +1,20 @@
 {
   "name": "Inventario",
   "short_name": "Inventario",
-  "display": "standalone",
   "start_url": "/Inventario/",
-  "scope": "/Inventario/",
+  "display": "standalone",
   "background_color": "#FFFFFF",
   "theme_color": "#FFFFFF",
   "icons": [
     {
+      "src": "/Inventario/icons/apple-touch-icon-v3.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
       "src": "/Inventario/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
