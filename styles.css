@@ -97,10 +97,10 @@ h1{
   color:white;
 }
 
-/* Cambiado para mostrar siempre 2 columnas en móviles */
+/* Grilla automática inteligente según la pantalla */
 .grid{
   display:grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap:12px;
   padding: 0 18px 24px;
 }
