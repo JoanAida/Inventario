@@ -185,6 +185,7 @@ h1{
   background:rgba(0,0,0,.55);
   display:none;
   align-items:end;
+  z-index:999;
 }
 
 .overlay.show{
@@ -201,6 +202,35 @@ h1{
   padding-bottom: max(18px, env(safe-area-inset-bottom));
   max-height:92vh;
   overflow:auto;
+}
+
+/* Opciones tipo lista dentro del Pop-up de Columnas */
+.pop-options{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:14px;
+}
+
+.pop-btn{
+  padding:14px;
+  border:1px solid var(--line);
+  background:var(--card);
+  color:var(--text);
+  border-radius:14px;
+  font-size:15px;
+  font-weight:600;
+  text-align:left;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.pop-btn.active{
+  border-color:var(--accent);
+  background:var(--accent);
+  color:white;
 }
 
 label{
